@@ -5,13 +5,13 @@
 ## 每次会话开始
 
 1. 读 `progress.md`，找到「下次入口」。
-2. 读 `plan/scheduler-roadmap.md` 里当前任务（现在通常是 T1-1）的原文。**这是唯一考纲**。
+2. 读 `plan/` 下对应路线的当前任务原文（T → `scheduler-roadmap.md`，V → `volcano-roadmap.md`，M → `lm-roadmap.md`）。**这是唯一考纲**。
 3. 读 `acceptance/` 下当前任务的文件和最近一次验收记录。
 4. 按 `.agents/skills/dialogue-acceptance/SKILL.md` 的流程继续：先补答快照里的「待答」，再进下一步。
 
 ## 硬规则
 
-- **考纲只来自 `plan/scheduler-roadmap.md`**，不要用 `docs/` 里的产出物反推范围，也不要自拟考纲。
+- **考纲只来自 `plan/` 下的三份路线图**，不要用 `docs/` 里的产出物反推范围，也不要自拟考纲。
 - **先粗后细**：主干没通时，缓存、goroutine、数据结构、插件内部一律标「暂缓」，不判失败。
 - **每个判定必须指回 `文件:行号`**（源码版本固定 v1.32.0）。
 - 用户答错先追问一次，再纠正；不奉承，不把「看过文档」当「理解」。
