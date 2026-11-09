@@ -1,0 +1,18 @@
+# k8s 源码快照（用 scripts/setup-source.* 拉取）
+/pkg/
+/staging/
+/test/
+/cmd/
+/go.mod
+/go.sum
+/LICENSE
+
+# 本地工作副本（仓库内以 docs/ 下的版本为准）
+/SCHEDULER_CALLCHAIN.md
+/SCHEDULER_FAILURE_MATRIX.html
+
+# 本地环境
+.env
+*.local
+.DS_Store
+Thumbs.db

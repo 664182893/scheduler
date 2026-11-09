@@ -1,0 +1,15 @@
+I1104 14:14:31.095867       1 eventhandlers.go:132] "Add event for unscheduled pod" pod="default/nginx-demo-v10"
+I1104 14:14:31.095999       1 scheduling_queue.go:587] "Pod moved to an internal scheduling queue" pod="default/nginx-demo-v10" event="UnschedulablePodAdd" queue="Active"
+I1104 14:14:31.096147       1 schedule_one.go:83] "About to try and schedule pod" pod="default/nginx-demo-v10"
+I1104 14:14:31.096206       1 schedule_one.go:99] "Attempting to schedule pod" pod="default/nginx-demo-v10"
+I1104 14:14:31.096568       1 default_binder.go:53] "Attempting to bind pod to node" logger="Bind.DefaultBinder" pod="default/nginx-demo-v10" node="wpk8s-control-plane"
+I1104 14:14:31.096744       1 pod_expansion.go:50] "Request Body" logger="Bind.DefaultBinder" pod="default/nginx-demo-v10" body=<
+I1104 14:14:31.096892       1 round_trippers.go:473] curl -v -XPOST  -H "Accept: application/vnd.kubernetes.protobuf, */*" -H "Content-Type: application/vnd.kubernetes.protobuf" -H "User-Agent: kube-scheduler/v1.32.0 (linux/amd64) kubernetes/70d3cc9/scheduler" 'https://172.18.0.2:6443/api/v1/namespaces/default/pods/nginx-demo-v10/binding'
+I1104 14:14:31.104158       1 round_trippers.go:560] POST https://172.18.0.2:6443/api/v1/namespaces/default/pods/nginx-demo-v10/binding 201 Created in 7 milliseconds
+I1104 14:14:31.104316       1 eventhandlers.go:186] "Delete event for unscheduled pod" pod="default/nginx-demo-v10"
+I1104 14:14:31.104353       1 eventhandlers.go:214] "Add event for scheduled pod" pod="default/nginx-demo-v10"
+I1104 14:14:31.104565       1 pod_expansion.go:50] "Response Body" logger="Bind.DefaultBinder" pod="default/nginx-demo-v10" body=<
+I1104 14:14:31.104672       1 cache.go:390] "Finished binding for pod, can be expired" podKey="8c7b42c6-fd68-4c37-9bb2-0cad2b59464a" pod="default/nginx-demo-v10"
+I1104 14:14:31.104800       1 schedule_one.go:325] "Successfully bound pod to node" pod="default/nginx-demo-v10" node="wpk8s-control-plane" evaluatedNodes=1 feasibleNodes=1
+I1104 14:14:31.122248       1 eventhandlers.go:251] "Update event for scheduled pod" pod="default/nginx-demo-v10"
+I1104 14:14:32.382635       1 eventhandlers.go:251] "Update event for scheduled pod" pod="default/nginx-demo-v10"

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Kubernetes Scheduler 失败与回滚</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; max-width: 1100px; margin: 32px auto; padding: 0 16px; color: #1f2329; line-height: 1.6; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 18px; margin-top: 28px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 24px; }
+  th, td { border: 1px solid #c9cdd4; padding: 6px 10px; text-align: left; vertical-align: top; font-size: 14px; }
+  th { background: #f2f3f5; font-weight: 600; }
+  code { background: #f2f3f5; padding: 1px 4px; border-radius: 3px; font-size: 13px; }
+  .note { color: #646a73; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>Kubernetes Scheduler：同步失败 / 异步失败 / 回滚矩阵</h1>
+<p class="note">用途：在浏览器中打开本页 → Ctrl+A 全选 → Ctrl+C 复制 → Ctrl+V 粘贴到飞书文档，飞书会把 HTML 表格转成原生表格。</p>
+
+<h2>0. 分界线</h2>
+<table>
+  <thead>
+    <tr><th>路径</th><th>判定位置</th><th>处理函数</th><th>此时 cache 状态</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>同步失败</td><td><code>schedule_one.go:114</code></td><td><code>FailureHandler</code> = <code>handleSchedulingFailure</code>（<code>schedule_one.go:1023</code>）</td><td>可能还没 assume（选节点阶段），也可能已 assume（Reserve/Permit 阶段）</td></tr>
+    <tr><td>异步失败</td><td><code>schedule_one.go:128</code></td><td><code>handleBindingCycleError</code>（<code>schedule_one.go:345</code>）</td><td>一定已 assume + 已 Reserve，必须退账</td></tr>
+  </tbody>
+</table>
+
+<h2>1. 同步失败：7 种触发情况</h2>
+<p class="note">全部发生在 <code>schedulingCycle</code>（<code>schedule_one.go:138</code>）内部。</p>
+<table>
+  <thead>
+    <tr><th>#</th><th>触发点</th><th>位置</th><th>status 码</th><th>典型原因</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><code>SchedulePod</code> 返回 <code>ErrNoNodesAvailable</code></td><td>148-156</td><td><code>UnschedulableAndUnresolvable</code></td><td>快照里没有任何节点（<code>schedulePod:419</code>）</td></tr>
+    <tr><td>2</td><td><code>SchedulePod</code> 返回非 <code>FitError</code></td><td>158-161</td><td><code>Error</code></td><td><code>UpdateSnapshot</code> 失败、PreFilter/Filter/Score 插件报 Error、<code>selectHost</code> 空列表</td></tr>
+    <tr><td>3</td><td><code>SchedulePod</code> 返回 <code>FitError</code>，无 PostFilter 插件</td><td>169-172</td><td><code>Unschedulable</code></td><td>没有节点放得下，也无法抢占</td></tr>
+    <tr><td>4</td><td><code>SchedulePod</code> 返回 <code>FitError</code>，有 PostFilter 插件</td><td>175-188</td><td><code>Unschedulable</code></td><td>走抢占（<code>RunPostFilterPlugins</code>），写 <code>NominatedNodeName</code>，下一轮再试</td></tr>
+    <tr><td>5</td><td><code>assume</code> 失败</td><td>197-205</td><td><code>Error</code></td><td>典型是 cache 里已有该 Pod（重复 assume）</td></tr>
+    <tr><td>6</td><td><code>RunReservePluginsReserve</code> 失败</td><td>208-228</td><td>Rejected → <code>Unschedulable</code>，否则原样</td><td>插件资源预留失败（如卷分配）</td></tr>
+    <tr><td>7</td><td><code>RunPermitPlugins</code> 失败（非 Wait 非 Success）</td><td>231-253</td><td>同上</td><td>Permit 插件直接拒绝</td></tr>
+  </tbody>
+</table>
+<p class="note">要点：情况 6、7 已在 <code>schedulingCycle</code> 内部就地退账（<code>RunReservePluginsUnreserve</code> + <code>Cache.ForgetPod</code>，见 210-213、234-237），所以 <code>FailureHandler</code> 只负责重排队与记事件。Permit 返回 Wait 不算失败，真正阻塞在异步的 <code>WaitOnPermit</code>（<code>framework.go:1525</code>）。</p>
+
+<h2>2. 异步失败：3 个出口</h2>
+<p class="note">全部发生在 <code>bindingCycle</code>（<code>schedule_one.go:266</code>）内部。</p>
+<table>
+  <thead>
+    <tr><th>#</th><th>触发点</th><th>位置</th><th>典型原因</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td><code>WaitOnPermit</code> 失败</td><td>279</td><td>Permit 等待期间被插件 Reject 或插件侧超时报负（<code>framework.go:1528-1536</code>）</td></tr>
+    <tr><td>2</td><td><code>RunPreBindPlugins</code> 失败</td><td>296</td><td>绑定前准备失败，典型是卷挂载/参数准备</td></tr>
+    <tr><td>3</td><td><code>sched.bind</code> 失败</td><td>320</td><td>extender Bind 失败；<code>RunBindPlugins</code> 返回 Error，最典型是 <code>Pods.Bind</code> 的 HTTP 调用失败（<code>default_binder.go:58</code>）</td></tr>
+  </tbody>
+</table>
+<p class="note"><code>SchedulingQueue.Done</code> 在 PreBind 成功后（317）就调用，因为之后的失败只算 Error，不再判 Unschedulable。</p>
+
+<h2>3. handleBindingCycleError 的兜底四步</h2>
+<table>
+  <thead>
+    <tr><th>步骤</th><th>动作</th><th>位置</th><th>作用</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>①</td><td><code>RunReservePluginsUnreserve</code></td><td>357；实现见 <code>framework.go:1414</code>、逆序见 1427</td><td>逆序调用各 Reserve 插件的 <code>Unreserve</code>，释放插件级资源</td></tr>
+    <tr><td>②</td><td><code>Cache.ForgetPod</code></td><td>358；实现见 <code>cache.go:404</code>、<code>removePod:460</code></td><td>从 NodeInfo 摘除 Pod、删除 podStates 与 assumedPods，恢复资源账本</td></tr>
+    <tr><td>③</td><td><code>MoveAllToActiveOrBackoffQueue</code></td><td>361-373；实现见 <code>scheduling_queue.go:1056</code></td><td>发 <code>EventAssignedPodDelete</code>，唤醒被该 Pod 挡住的 Pod</td></tr>
+    <tr><td>④</td><td><code>FailureHandler</code></td><td>376 → <code>schedule_one.go:1023</code></td><td>记事件、写 Pod condition、重排队、Done 清理</td></tr>
+  </tbody>
+</table>
+
+<h2>4. rejected 与 error 两种语义</h2>
+<p class="note"><code>IsRejected()</code> 的定义见 <code>framework/interface.go:369-372</code>：<code>Unschedulable</code>、<code>UnschedulableAndUnresolvable</code>、<code>Pending</code> 三者之一。</p>
+<table>
+  <thead>
+    <tr><th>维度</th><th><code>IsRejected() == true</code></th><th><code>IsRejected() == false</code>（通常 <code>Error</code>）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>含义</td><td>Pod 本身不适合当前集群状态</td><td>环境/网络/插件故障</td></tr>
+    <tr><td>FailureHandler 写入 reason</td><td><code>Unschedulable</code></td><td><code>SchedulerError</code></td></tr>
+    <tr><td>唤醒事件</td><td>defer 延后发送，preCheck 排除自己</td><td>立即发送，preCheck 为 nil</td></tr>
+    <tr><td>队列行为</td><td>按 UnschedulablePlugins + QueueingHint 决定，可能进 unschedulablePods</td><td>backoff 后尽快重试</td></tr>
+  </tbody>
+</table>
+
+<h2>5. 同步 vs 异步对照</h2>
+<table>
+  <thead>
+    <tr><th>维度</th><th>同步失败</th><th>异步失败</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>判定</td><td><code>ScheduleOne:114</code></td><td><code>ScheduleOne:128</code></td></tr>
+    <tr><td>处理</td><td><code>handleSchedulingFailure</code>（1023）</td><td><code>handleBindingCycleError</code>（345）→ 再进 <code>handleSchedulingFailure</code></td></tr>
+    <tr><td>是否已 assume</td><td>可能没有；Reserve/Permit 阶段已 assume</td><td>一定有</td></tr>
+    <tr><td>退账位置</td><td>Reserve/Permit 分支内联（210-213 / 234-237）；选节点阶段无需退</td><td>统一在 <code>handleBindingCycleError</code></td></tr>
+    <tr><td>是否发集群事件</td><td>不发</td><td>发 <code>EventAssignedPodDelete</code></td></tr>
+    <tr><td>nominatedInfo</td><td>保留（抢占可能刚产生）</td><td>丢弃（<code>clearNominatedNode</code>）</td></tr>
+  </tbody>
+</table>
+
+<h2>6. 易踩的坑</h2>
+<ol>
+  <li><code>ForgetPod</code> 失败只打日志（358-359），仍继续 <code>FailureHandler</code>，账可能没退干净，靠 cache TTL 兜底。</li>
+  <li>Reserve 失败不会退两次：同步分支内联退账，<code>FailureHandler</code> 不碰 cache。</li>
+  <li><code>assume</code> 失败无需退账，因为 <code>AssumePod</code> 一开始就失败，cache 未变。</li>
+  <li><code>Unreserve</code> 撤销的是插件资源预留；<code>assume</code> 的撤销永远是 <code>ForgetPod</code>，层次不同。</li>
+  <li>成功路径不经过 <code>handleBindingCycleError</code>，<code>RunPostBindPlugins</code>（333）只在绑定成功时调用。</li>
+</ol>
+
+</body>
+</html>

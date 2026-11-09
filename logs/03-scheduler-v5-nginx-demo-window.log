@@ -1,0 +1,25 @@
+I1104 14:13:04.307287       1 leaderelection.go:293] successfully renewed lease kube-system/kube-scheduler
+I1104 14:13:04.708037       1 pathrecorder.go:243] kube-scheduler: "/livez" satisfied by exact match
+I1104 14:13:04.708124       1 httplog.go:134] "HTTP" verb="GET" URI="/livez" latency="146.208µs" userAgent="kube-probe/1.32" audit-ID="" srcIP="127.0.0.1:41616" resp=200
+I1104 14:13:04.713249       1 pathrecorder.go:243] kube-scheduler: "/readyz" satisfied by exact match
+I1104 14:13:04.713357       1 httplog.go:134] "HTTP" verb="GET" URI="/readyz" latency="162.509µs" userAgent="kube-probe/1.32" audit-ID="" srcIP="127.0.0.1:41624" resp=200
+I1104 14:13:05.428525       1 eventhandlers.go:132] "Add event for unscheduled pod" pod="default/nginx-demo"
+I1104 14:13:05.428657       1 scheduling_queue.go:587] "Pod moved to an internal scheduling queue" pod="default/nginx-demo" event="UnschedulablePodAdd" queue="Active"-->queueSort
+I1104 14:13:05.428761       1 schedule_one.go:83] "About to try and schedule pod" pod="default/nginx-demo"
+I1104 14:13:05.428782       1 schedule_one.go:99] "Attempting to schedule pod" pod="default/nginx-demo"-->prefilter
+I1104 14:13:05.429294       1 default_binder.go:53] "Attempting to bind pod to node" logger="Bind.DefaultBinder" -->prebind pod="default/nginx-demo" node="wpk8s-control-plane"
+I1104 14:13:05.438261       1 eventhandlers.go:186] "Delete event for unscheduled pod" pod="default/nginx-demo"
+I1104 14:13:05.438434       1 cache.go:390] "Finished binding for pod, can be expired" podKey="0f5c0115-4f09-4323-8094-8f6b5b4ed745" pod="default/nginx-demo"-->bind
+I1104 14:13:05.438537       1 schedule_one.go:325] "Successfully bound pod to node" pod="default/nginx-demo" node="wpk8s-control-plane" evaluatedNodes=1 feasibleNodes=1-->postbinding
+I1104 14:13:05.438434       1 eventhandlers.go:214] "Add event for scheduled pod" pod="default/nginx-demo"
+I1104 14:13:05.454462       1 eventhandlers.go:251] "Update event for scheduled pod" pod="default/nginx-demo"
+I1104 14:13:05.561696       1 eventhandlers.go:79] "Update event for node" node="wpk8s-control-plane"
+I1104 14:13:05.713537       1 pathrecorder.go:243] kube-scheduler: "/readyz" satisfied by exact match
+I1104 14:13:05.713691       1 httplog.go:134] "HTTP" verb="GET" URI="/readyz" latency="215.713µs" userAgent="kube-probe/1.32" audit-ID="" srcIP="127.0.0.1:41630" resp=200
+I1104 14:13:06.313833       1 leaderelection.go:293] successfully renewed lease kube-system/kube-scheduler
+I1104 14:13:06.713198       1 pathrecorder.go:243] kube-scheduler: "/readyz" satisfied by exact match
+I1104 14:13:06.713348       1 httplog.go:134] "HTTP" verb="GET" URI="/readyz" latency="182.611µs" userAgent="kube-probe/1.32" audit-ID="" srcIP="127.0.0.1:41640" resp=200
+I1104 14:13:07.147402       1 eventhandlers.go:251] "Update event for scheduled pod" pod="default/nginx-demo"
+I1104 14:13:07.713273       1 pathrecorder.go:243] kube-scheduler: "/readyz" satisfied by exact match
+I1104 14:13:07.713416       1 httplog.go:134] "HTTP" verb="GET" URI="/readyz" latency="198.311µs" userAgent="kube-probe/1.32" audit-ID="" srcIP="127.0.0.1:41642" resp=200
+I1104 14:13:08.320489       1 leaderelection.go:293] successfully renewed lease kube-system/kube-scheduler

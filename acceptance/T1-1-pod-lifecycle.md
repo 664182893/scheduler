@@ -1,8 +1,10 @@
 # T1-1 追一个 Pod 的一生（任务单）
 
 > 用途：一份可复用的学习任务单。任务原文、当前进度、主干骨架、待答题、盲区都在这里，换会话或换机器都能接着走。下个任务复制本文件改名即可，见文末「复用方式」。
+>
+> 仓库内位置：`acceptance/T1-1-pod-lifecycle.md`；全局进度见 `progress.md`；考纲见 `plan/scheduler-roadmap.md`。
 
-- 源码：kube-scheduler v1.32.0（`pkg/scheduler/**`）
+- 源码：kube-scheduler v1.32.0（`pkg/scheduler/**`，用 `scripts/setup-source.*` 拉取）
 - 最近更新：2026-11-09
 - 当前粒度：**粗颗粒（6 阶段）**，细节（cache / goroutine / 插件内部）暂缓
 
@@ -89,9 +91,9 @@
 
 新会话直接说：
 
-> 继续 T1-1：读 `scheduler/acceptance/T1-1-pod-lifecycle.md`，先答第 4 节的 A/B/C 三题。
+> 继续 T1-1：读 `acceptance/T1-1-pod-lifecycle.md`，先答第 4 节的 A/B/C 三题。
 
-完整验收记录（本地，未推送）：`scheduler/acceptance/2026-11-07-scheduler-callchain.md`。
+完整验收记录：`acceptance/2026-11-07-scheduler-callchain.md`。
 
 ---
 

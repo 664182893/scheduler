@@ -1,0 +1,51 @@
+Name:             nginx-demo
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             wpk8s-control-plane/172.18.0.2
+Start Time:       Wed, 04 Nov 2026 22:13:05 +0800
+Labels:           run=nginx-demo
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.5
+IPs:
+  IP:  10.244.0.5
+Containers:
+  nginx-demo:
+    Container ID:   containerd://a3a98c3f2fcef2b51f6add68283801e5d7fa2e668b1f6bc1980568268c419a0f
+    Image:          nginx:latest
+    Image ID:       docker.io/library/import-2026-11-04@sha256:b52711470f0a6ef118c89f32d9c710ca35cbf4e4a0cfbd22fb122d02f0d445da
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Wed, 04 Nov 2026 22:13:06 +0800
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-vkltl (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-vkltl:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  6m39s  default-scheduler  Successfully assigned default/nginx-demo to wpk8s-control-plane
+  Normal  Pulled     6m39s  kubelet            Container image "nginx:latest" already present on machine
+  Normal  Created    6m38s  kubelet            Created container: nginx-demo
+  Normal  Started    6m38s  kubelet            Started container nginx-demo
