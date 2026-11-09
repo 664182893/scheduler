@@ -1,4 +1,5 @@
 # k8s 源码快照（用 scripts/setup-source.* 拉取）
+/kubernetes-*/
 /pkg/
 /staging/
 /test/
