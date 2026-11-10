@@ -52,13 +52,19 @@
 
 ---
 
-## 4. 待答的 3 题（当前验收）
+## 4. 粗颗粒验收记录（2026-11-09）
 
-**A.** 按顺序说这 6 个阶段，每段用你自己的话说一句「它在解决什么问题」。不用背函数名，但要说出阶段之间的先后关系。
+| # | 你的答案摘要 | 判定 | 依据 / 纠正 |
+|---|---|---|---|
+| A | 0 `Scheduler.Run` 收集待调度 Pod → 1 `NextPod` 逐个处理 → 2 `schedulePod` 选节点 → 3 `assume` → `bind` → 5 发给 apiserver/etcd | 🟡 模糊（2 处 🔴） | ① `Run` 不做收集：它只启动队列并起 goroutine 循环调 `ScheduleOne`（`scheduler.go:464`）；入队是 informer → `addPodToSchedulingQueue`（`eventhandlers.go:126`）→ `PriorityQueue.Add`（`scheduling_queue.go:598`）。② `NextPod` 只负责 `Pop`（`scheduler.go:378`、`scheduling_queue.go:857`）；处理逻辑在 `ScheduleOne`（`schedule_one.go:65`）。③ 阶段 3 不只 `assume`：还有 `RunReservePluginsReserve`（`framework.go:1370`）与 `RunPermitPlugins`（`framework.go:1454`）；`bind` 是阶段 4。④ 阶段 5 是 `finishBinding`（`:1000`）+ `RunPostBindPlugins`（`framework.go:1335`）；写 apiserver 在阶段 4。 |
+| B | `assume` 时节点已定；`bind` 后集群可见；为了优化，`assume` 后可继续调度别的 Pod | 🟡 模糊（方向对） | 三个时间点要分开：**决定**节点是 `selectHost`（`:873`）；**调度器内部认为已定**是 `assume`（`:946`，写 `Pod.NodeName` + cache）；**集群可见**是 `Pods.Bind` 成功、apiserver 持久化之后。PVC 挂载更准确属于 PreBind / volume 相关，不是 bind 本身。 |
+| C | 选节点只是映射，不代表绑定成功；写 apiserver 要和绑定完成对齐 | 🟡 模糊（前提对，机制错） | 写 apiserver **本身就是绑定**：写失败就是绑定失败，不存在「绑定失败却写了」。拆两个周期的真正原因：① 绑定是远程 I/O，同步做会阻塞调度循环；② `Permit` 可能返回 Wait（gang / 外部审批），不能占着主循环；③ `PreBind` 可能失败；④ `assume` 先记账，失败再回滚（`RunReservePluginsUnreserve` + `Cache.ForgetPod`）。这就是乐观并发：先占坑、后落地、失败退账。 |
 
-**B.** 哪一步之后「节点已经定了」？哪一步之后「集群里其他组件能看到这个 Pod 已绑定」？这两个时间点为什么不是同一个？
+### 复测（答完这 3 题，粗颗粒层才算过）
 
-**C.** 为什么「选节点」和「写 apiserver」要拆成两个周期，而不是选完节点顺手就写？
+1. `Scheduler.Run` 到底做了什么？Pod 是在哪一步、由谁放进 activeQ 的？
+2. 阶段 3 里 `assume` 之后还有哪两个调用？`Permit` 返回 Wait 时，绑定会立刻发生吗？
+3. `Pods.Bind` 失败时，cache 里这个 Pod 的账还在吗？谁负责退？
 
 ---
 
