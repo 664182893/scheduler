@@ -29,7 +29,7 @@
 - [x] 产出物形式核对：36 个节点、位置齐全、三要素齐全
 - [x] 第 1 步编排（`schedule_one.go:65`）
 - [x] 函数字段机制：`NextPod = podQueue.Pop`；`SchedulePod` / `FailureHandler` 是字段，不是方法
-- [ ] **粗颗粒 6 阶段口述（当前卡在这里，见第 4 节）**
+- [ ] **粗颗粒 6 阶段口述（复测 3 题已判 🟡/🟡/⬜，待答追问后重测）**
 - [ ] 细颗粒 12 步（暂缓，主干通了再开）
 - [ ] 终检：不看图口述完整链路
 
@@ -66,6 +66,25 @@
 2. 阶段 3 里 `assume` 之后还有哪两个调用？`Permit` 返回 Wait 时，绑定会立刻发生吗？
 3. `Pods.Bind` 失败时，cache 里这个 Pod 的账还在吗？谁负责退？
 
+### 复测记录（2026-11-10）
+
+| # | 你的答案摘要 | 判定 | 依据 / 缺口 |
+|---|---|---|---|
+| 1 | `Run` 起 goroutine 跑 `ScheduleOne`，队列收 Pod，`ScheduleOne` 逐个 Pop；不知道谁放进 activeQ | 🟡 模糊 | 对的部分：`scheduler.go:474` `go wait.UntilWithContext(ctx, sched.ScheduleOne, 0)`；`scheduling_queue.go:857` `Pop`。缺：`scheduler.go:466` `SchedulingQueue.Run`（先启动队列本体）、`:476-480` 等 `ctx.Done()` 后 `Close` 队列与 `Profiles.Close`。入队链路：`eventhandlers.go:126 addPodToSchedulingQueue` → `scheduling_queue.go:598 PriorityQueue.Add`。→ G1、G8 仍 open |
+| 2 | reserve 插件 + permit 插件；Wait 时不清楚会怎样 | 🟡 模糊 | 两个调用正确：`framework.go:1370 RunReservePluginsReserve`、`framework.go:1454 RunPermitPlugins`。缺 Wait 语义。→ G9 仍 open |
+| 3 | bind 失败后谁退账完全不清楚 | ⬜ 空白 | `handleSchedulingFailure`（`schedule_one.go:1053`）；退账 = `RunReservePluginsUnreserve`（`framework.go:1298`）+ `Cache.ForgetPod`。→ G10 仍 open |
+
+**本轮结论**：3 题均未通过，粗颗粒层未完成。
+
+### 待答追问（下次开场先补，不计分）
+
+| # | 问题 | 预期考核点 |
+|---|---|---|
+| 追1 | `assume` 占坑后，`bind` 失败时调度器靠**什么数据结构**反查到「这 Pod 占过坑」？ | `Cache` 的 assumed pods 记账 → `ForgetPod` |
+| 追2 | `Permit` 返回 Wait 时，`ScheduleOne` 这个 goroutine 会阻塞等吗？（会/不会 + 一个理由） | `waitingPods` 异步等待；若阻塞则单循环被卡死 |
+
+> 追问未答，不得进入细颗粒 12 步。
+
 ---
 
 ## 5. 已澄清的事实（防回退）
@@ -90,6 +109,9 @@
 | G5 | 不清楚 `SchedulingQueue.Done` 的语义 | open |
 | G6 | 失败出口函数名说错 | open |
 | G7 | 不理解 `FailureHandler` / `SchedulePod` 是函数字段 | fixed |
+| G8 | 认为 `Scheduler.Run` 负责收集待调度 Pod | open |
+| G9 | 阶段 3 跳过 Reserve / Permit | open |
+| G10 | 认为拆分绑定周期是为了避免「绑定失败却写入」 | open |
 
 ---
 
@@ -97,7 +119,7 @@
 
 新会话直接说：
 
-> 继续 T1-1：读 `acceptance/T1-1-pod-lifecycle.md`，先答第 4 节的 A/B/C 三题。
+> 继续 T1-1：读 `acceptance/T1-1-pod-lifecycle.md`，**先答第 4 节末「待答追问」2 题**，再重测 A/B/C。
 
 完整验收记录：`acceptance/2026-11-07-scheduler-callchain.md`。
 

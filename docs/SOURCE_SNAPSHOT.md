@@ -32,7 +32,29 @@ scheduler/
 └── LICENSE                        # Apache-2.0
 ```
 
-> 说明：这是只读源码快照，不含 `go.mod` / `vendor` / `staging` 替换关系，**不能直接 `go build`**。需要编译请 `git clone kubernetes` 或 `go install k8s.io/kubernetes/cmd/kube-scheduler@v1.32.0`。
+> 说明：这是本地源码工作副本，位于 `D:\code\GoCode\src\scheduler\k8s-v1.32.0`（独立 git 仓库，tag `v1.32.0`）。实测 `go build ./pkg/scheduler/` 通过（Go 1.23.0）。
+>
+> **注意目录层级**：仓库默认的 `scripts/setup-source.ps1` 会把源码拉到 `<本仓库>/kubernetes-v1.32.0/`，但当前实际快照在**仓库外**的上一级 `k8s-v1.32.0/`。本文所有 `文件:行号` 均以 `k8s-v1.32.0/pkg/scheduler/` 为准。
+
+## 注释汉化（2026-11-10）
+
+`pkg/scheduler/` 下三个核心文件已完成中英对照汉化：**在原英文注释行末尾追加中文译文，英文原文保留，不增删任何行**。
+
+| 文件 | 总行数 | 汉化处数 |
+|---|---|---|
+| `scheduler.go` | 589 | 93 |
+| `schedule_one.go` | 1134 | 180 |
+| `eventhandlers.go` | 665 | 84 |
+
+正因为「只追加、不增行」，**本文所有 `文件:行号` 在汉化后依然精确有效**，无需换算。校验方式：
+
+```bash
+cd D:/code/GoCode/src/scheduler/k8s-v1.32.0
+diff <(git show HEAD:pkg/scheduler/schedule_one.go | sed -E 's#//.*$##') ...
+gofmt -l pkg/scheduler/     # 无输出 = 格式合规
+```
+
+格式约定：`// English original. // 中文译文`；空注释行保持纯 `//`；许可头、`//go:build`、`//nolint` 不译。
 
 ## 日志行号 → 源码（对应本次 v=5 日志）
 
