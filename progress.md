@@ -1,6 +1,6 @@
 # 进度总表
 
-- 最近更新：2026-11-10
+- 最近更新：2026-11-11
 - 当前任务：**T1-1 追一个 Pod 的一生**
 - 当前粒度：**粗颗粒（6 阶段）**
 - 源码版本：kube-scheduler v1.32.0
@@ -9,17 +9,26 @@
 
 ## 下次入口
 
-1. **先答 2 道追问**（见下方「待答追问」，不计分，用于逼出推理过程）。
-2. 追问后重答第 4 节 3 题；全过则粗颗粒层通过。
+1. **G1 定点练习**（3 分钟）：cache / queue / `NextPod` 三者切分。G1 已升级 must-fix（出现 ≥2 次）。
+2. 然后重测 §4 的 A/B/C 三题；全过则粗颗粒层通过。
 3. 通过后进入细颗粒 12 步，从第 2 步 `schedule_one.go:138` 开始。
 4. 12 步走完做终检：不看图口述完整链路。
 
-## 待答追问（2026-11-10 未答，下次开场先补）
+## 追问复盘（2026-11-10 已答完）
 
-| # | 问题 | 考核点 |
+| # | 结果 | 要点 |
 |---|---|---|
-| 追1 | `assume` 占坑后，`bind` 失败时调度器靠**什么数据结构**反查到「这 Pod 占过坑」？ | 引出 `Cache.ForgetPod` 与 `RunReservePluginsUnreserve` |
-| 追2 | `Permit` 返回 Wait 时，`ScheduleOne` 这个 goroutine 会阻塞等吗？（会/不会 + 一个理由） | 引出 `waitingPods` 异步等待，避免阻塞单一调度循环 |
+| 追1 | ✅ fixed（G10 关闭） | 记账本是 `cache.go:67` 的 `assumedPods sets.Set[string]`；销账两条路：`AddPod`（成功，经过滤器把 Update 转译成 OnAdd）与 `ForgetPod`（失败）。三条出口全汇入 `removePod`（`cache.go:460`） |
+| 追2 | ✅ fixed（G9 关闭） | `RunPermitPlugins` 不阻塞，只登记 `waitingPods` 后返回 Wait；阻塞发生在 `WaitOnPermit`（`framework.go:1514`），跑在 `schedule_one.go:121` 起的 binding goroutine 里 |
+
+### 本轮新增已澄清事实
+
+1. `FilteringResourceEventHandler.OnUpdate`（`staging/.../tools/cache/controller.go:313-326`）会把「过滤前 false → 过滤后 true」的 Update **转译成 OnAdd**。这就是「assumed 的 Pod 收到 Add 事件」的机制（见 `cache.go:532-533` 注释）。
+2. `RemovePod`（`cache.go:546`）**不检查** `assumedPods`；`ForgetPod`（`cache.go:418-422`）**检查**。二者不对称是有意设计：前者代表外部事实删除，后者代表调度器主动退账。
+3. `cleanupAssumedPods`（`cache.go:730`）默认**不生效**：`durationToExpireAssumedPod = 0`（`scheduler.go:58`），`ttl != 0` 条件不成立。
+4. 删除事件有两个 handler：`deletePodFromCache`（`eventhandlers.go:376`）清 cache，`deletePodFromSchedulingQueue`（`:407`）清队列。
+5. `schedulingCycle:231` 把 Permit 的 `Wait` 与 `Success` 同等对待；差别只在 `WaitOnPermit` 一侧。
+6. 接口方法（如 `fwk.RunBindPlugins`）跳到 `interface.go` 的声明是正常的；实现在 `runtime/framework.go:1286`（`*frameworkImpl`）。
 
 ## 第 4 节复测结果（2026-11-10）
 
@@ -29,7 +38,7 @@
 | 2 | 🟡 模糊 | 两个调用答对（`framework.go:1370` / `:1454`）；Wait 行为未答（G9） |
 | 3 | ⬜ 空白 | 退账完全不清楚（`handleSchedulingFailure` @ `schedule_one.go:1053`）（G10） |
 
-**结论**：三题全未过，粗颗粒层尚未完成。G1/G8/G9/G10 均仍 open。
+**结论**：三题全未过。随后通过 2 道追问 + 1 轮定点复测补齐 G9/G10（均已 fixed），G8 已答对可关。**G1 仍在，已升级 must-fix**（cache 与 queue 混用，出现 2 次以上）。
 
 ## 33 张卡状态
 
@@ -39,7 +48,7 @@
 |---|---|---|---|---|
 | T0-1 | 让调度器说话 | W1 必做 | 🟡 有产出，未验收 | `logs/` 有 v=5 窗口与 describe |
 | T0-2 | 亲手制造一次 FailedScheduling | W1 必做 | 🟡 有产出，未验收 | `logs/08–10` + 失败矩阵 |
-| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | 复测 3 题全未过（🟡/🟡/⬜），待答 2 道追问 |
+| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | 追问已清 G9/G10；待做 G1 定点练习 → 重测 A/B/C |
 | T1-2 | 找到那个 goroutine 的边界 | W1 弹性 | ⬜ 未开始 | 与 T1-1 第 4/12 步重叠 |
 | T1-3 | 多个插件怎么合并成一个分数 | W2 弹性 | ⬜ 未开始 | |
 | T2-0 | 先把 kube-scheduler 编译出来 | W2 必做 | ⬜ 未开始 | |
@@ -90,7 +99,7 @@
 - [x] 产出物形式核对：36 节点、位置齐全、三要素齐全
 - [x] 第 1 步编排（`schedule_one.go:65`）
 - [x] 函数字段机制：`NextPod = podQueue.Pop`；`SchedulePod` / `FailureHandler` 是字段
-- [ ] 粗颗粒 6 阶段口述：复测 3 题已判（🟡/🟡/⬜），待答追问后重测
+- [~] 粗颗粒 6 阶段口述：追问已清 G9/G10；A/B/C 仍需重测（卡在 G1）
 - [ ] 细颗粒 12 步（第 2–12 步）
 - [ ] 终检：不看图口述完整链路
 
@@ -98,16 +107,16 @@
 
 | 编号 | 盲区 | 状态 |
 |---|---|---|
-| G1 | 把 `NextPod` 当「入队」 | open |
+| G1 | 把 `NextPod` 当「入队」；cache 与 queue 混用 | **open · must-fix** |
 | G2 | 选节点整段缺失（`ScheduleOne` 后直接跳到 `assume`） | open |
 | G3 | 把 `handleBindingCycleError` 当主干 | open |
 | G4 | 把 `NewCycleState` 当 PreFilter / 认为它让 Pod 进 activeQ | open |
 | G5 | 不清楚 `SchedulingQueue.Done` 的语义 | open |
 | G6 | 失败出口函数名说错 | open |
 | G7 | 不理解 `FailureHandler` / `SchedulePod` 是函数字段 | fixed |
-| G8 | 认为 `Scheduler.Run` 负责收集待调度 Pod | open |
-| G9 | 阶段 3 跳过 Reserve / Permit | open |
-| G10 | 认为拆分绑定周期是为了避免「绑定失败却写入」 | open |
+| G8 | 认为 `Scheduler.Run` 负责收集待调度 Pod | fixed（本轮第 1 题答对） |
+| G9 | 阶段 3 跳过 Reserve / Permit | fixed（追2） |
+| G10 | 认为拆分绑定周期是为了避免「绑定失败却写入」 | fixed（追1） |
 
 ## 会话日志
 
@@ -116,6 +125,7 @@
 - **2026-11-09（续）**：完成粗颗粒 A/B/C，三题均判 🟡；新增 G8–G10；给出 3 道复测题。
 - **2026-11-10**：克隆学习仓库到 `scheduler/scheduler/`。完成 `pkg/scheduler/` 三个核心文件的注释汉化（原地追加中文，不增删行，行数保持 589 / 1134 / 665）。由 `go build` 与 gofmt 验证通过；76 处文档行号引用经脚本全量核验仍有效。
 - **2026-11-10（续）**：做第 4 节复测 3 题，判 🟡/🟡/⬜，均未过。追1 问「靠什么反查占坑」、追2 问「Permit Wait 是否阻塞主循环」，待答。
+- **2026-11-10（末）**：追1/追2 均已答完并 fixed，G9/G10 关闭；G8 本轮答对也关闭。追1 过程中额外澄清了 assume 记账的三条出口、`FilteringResourceEventHandler` 把 Update 转译成 OnAdd 的机制、`RemovePod` 与 `ForgetPod` 的不对称、`cleanupAssumedPods` 默认不生效。G1（cache/queue 混用）本轮再现，升级 must-fix。
 
 ## 更新规则
 

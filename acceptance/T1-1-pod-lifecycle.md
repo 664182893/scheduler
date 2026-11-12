@@ -29,7 +29,7 @@
 - [x] 产出物形式核对：36 个节点、位置齐全、三要素齐全
 - [x] 第 1 步编排（`schedule_one.go:65`）
 - [x] 函数字段机制：`NextPod = podQueue.Pop`；`SchedulePod` / `FailureHandler` 是字段，不是方法
-- [ ] **粗颗粒 6 阶段口述（复测 3 题已判 🟡/🟡/⬜，待答追问后重测）**
+- [~] **粗颗粒 6 阶段口述（追问已清 G9/G10，卡在 G1）**
 - [ ] 细颗粒 12 步（暂缓，主干通了再开）
 - [ ] 终检：不看图口述完整链路
 
@@ -76,14 +76,14 @@
 
 **本轮结论**：3 题均未通过，粗颗粒层未完成。
 
-### 待答追问（下次开场先补，不计分）
+### 待答追问（2026-11-10 已答完）
 
-| # | 问题 | 预期考核点 |
+| # | 问题 | 结果 |
 |---|---|---|
-| 追1 | `assume` 占坑后，`bind` 失败时调度器靠**什么数据结构**反查到「这 Pod 占过坑」？ | `Cache` 的 assumed pods 记账 → `ForgetPod` |
-| 追2 | `Permit` 返回 Wait 时，`ScheduleOne` 这个 goroutine 会阻塞等吗？（会/不会 + 一个理由） | `waitingPods` 异步等待；若阻塞则单循环被卡死 |
+| 追1 | `assume` 占坑后，`bind` 失败时调度器靠**什么数据结构**反查到「这 Pod 占过坑」？ | ✅ `assumedPods` 集合（`cache.go:67`）；退账 `ForgetPod`，成功路径靠 `AddPod`；均汇入 `removePod` |
+| 追2 | `Permit` 返回 Wait 时，`ScheduleOne` 这个 goroutine 会阻塞等吗？ | ✅ 主循环不阻塞；`RunPermitPlugins` 登记后返回 Wait；阻塞在 binding goroutine 的 `WaitOnPermit` |
 
-> 追问未答，不得进入细颗粒 12 步。
+> 追问已清，下一步：**G1 定点练习** → 重测 A/B/C → 细颗粒 12 步。
 
 ---
 
@@ -109,9 +109,9 @@
 | G5 | 不清楚 `SchedulingQueue.Done` 的语义 | open |
 | G6 | 失败出口函数名说错 | open |
 | G7 | 不理解 `FailureHandler` / `SchedulePod` 是函数字段 | fixed |
-| G8 | 认为 `Scheduler.Run` 负责收集待调度 Pod | open |
-| G9 | 阶段 3 跳过 Reserve / Permit | open |
-| G10 | 认为拆分绑定周期是为了避免「绑定失败却写入」 | open |
+| G8 | 认为 `Scheduler.Run` 负责收集待调度 Pod | fixed |
+| G9 | 阶段 3 跳过 Reserve / Permit | fixed |
+| G10 | 认为拆分绑定周期是为了避免「绑定失败却写入」 | fixed |
 
 ---
 
