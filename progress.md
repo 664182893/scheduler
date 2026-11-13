@@ -1,18 +1,19 @@
 # 进度总表
 
-- 最近更新：2026-11-11
+- 最近更新：2026-11-12
 - 当前任务：**T1-1 追一个 Pod 的一生**
-- 当前粒度：**粗颗粒（6 阶段）**
+- 当前粒度：**粗颗粒（6 阶段）已通过 → 待开细颗粒 12 步**
 - 源码版本：kube-scheduler v1.32.0
 - 源码位置：`D:\code\GoCode\src\scheduler\k8s-v1.32.0`（仓库外，独立 git 仓库）
 - 注释汉化：`scheduler.go` / `schedule_one.go` / `eventhandlers.go` 已完成（追加式，行号不变）
+- 主干文档：`docs/T1-1-pod-lifecycle-6stages.md`（带行号超链接）
 
 ## 下次入口
 
-1. **G1 定点练习**（3 分钟）：cache / queue / `NextPod` 三者切分。G1 已升级 must-fix（出现 ≥2 次）。
-2. 然后重测 §4 的 A/B/C 三题；全过则粗颗粒层通过。
-3. 通过后进入细颗粒 12 步，从第 2 步 `schedule_one.go:138` 开始。
-4. 12 步走完做终检：不看图口述完整链路。
+1. 粗颗粒层已通过（A/B/C 全 ✅，G11 关闭）。
+2. **进入细颗粒 12 步**，从第 2 步 `schedule_one.go:138 schedulingCycle` 开始。
+3. 12 步走完做终检：不看图口述完整链路。
+4. G1（cache/queue 混用）仍为 must-fix，在细颗粒过程中持续观察。
 
 ## 追问复盘（2026-11-10 已答完）
 
@@ -29,6 +30,9 @@
 4. 删除事件有两个 handler：`deletePodFromCache`（`eventhandlers.go:376`）清 cache，`deletePodFromSchedulingQueue`（`:407`）清队列。
 5. `schedulingCycle:231` 把 Permit 的 `Wait` 与 `Success` 同等对待；差别只在 `WaitOnPermit` 一侧。
 6. 接口方法（如 `fwk.RunBindPlugins`）跳到 `interface.go` 的声明是正常的；实现在 `runtime/framework.go:1286`（`*frameworkImpl`）。
+7. `bind`（`schedule_one.go:968`）**自身不发任何网络请求**：先试 extender（`extendersBinding`），再转给 `fwk.RunBindPlugins`（`framework.go:1286`）→ `DefaultBinder.Bind`（`default_binder.go:51`）→ `Pods(ns).Bind()`（`:58`）。
+8. `FinishBinding`（`cache.go:376`）由 `defer` **总是执行**；不生效的是 `cleanupAssumedPods` 的删除动作。二者是两个独立开关。
+9. `bindingFinished` = 绑定流程已结束；`deadline` = 允许 assumed 记账保留的截止时间。`ttl=0` 时 `deadline=nil` 且永不删除。
 
 ## 第 4 节复测结果（2026-11-10）
 
@@ -48,7 +52,7 @@
 |---|---|---|---|---|
 | T0-1 | 让调度器说话 | W1 必做 | 🟡 有产出，未验收 | `logs/` 有 v=5 窗口与 describe |
 | T0-2 | 亲手制造一次 FailedScheduling | W1 必做 | 🟡 有产出，未验收 | `logs/08–10` + 失败矩阵 |
-| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | 追问已清 G9/G10；待做 G1 定点练习 → 重测 A/B/C |
+| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | **粗颗粒 6 阶段已通过**；待开细颗粒 12 步 |
 | T1-2 | 找到那个 goroutine 的边界 | W1 弹性 | ⬜ 未开始 | 与 T1-1 第 4/12 步重叠 |
 | T1-3 | 多个插件怎么合并成一个分数 | W2 弹性 | ⬜ 未开始 | |
 | T2-0 | 先把 kube-scheduler 编译出来 | W2 必做 | ⬜ 未开始 | |
@@ -99,7 +103,7 @@
 - [x] 产出物形式核对：36 节点、位置齐全、三要素齐全
 - [x] 第 1 步编排（`schedule_one.go:65`）
 - [x] 函数字段机制：`NextPod = podQueue.Pop`；`SchedulePod` / `FailureHandler` 是字段
-- [~] 粗颗粒 6 阶段口述：追问已清 G9/G10；A/B/C 仍需重测（卡在 G1）
+- [x] **粗颗粒 6 阶段口述（2026-11-12 通过）**
 - [ ] 细颗粒 12 步（第 2–12 步）
 - [ ] 终检：不看图口述完整链路
 
@@ -117,6 +121,8 @@
 | G8 | 认为 `Scheduler.Run` 负责收集待调度 Pod | fixed（本轮第 1 题答对） |
 | G9 | 阶段 3 跳过 Reserve / Permit | fixed（追2） |
 | G10 | 认为拆分绑定周期是为了避免「绑定失败却写入」 | fixed（追1） |
+| G11 | 把 `FinishBinding` 当成「集群可见」标志 | fixed（2026-11-12） |
+| G12 | PreFilter/Score 被当成独立阶段 | fixed（2026-11-12） |
 
 ## 会话日志
 
@@ -126,6 +132,7 @@
 - **2026-11-10**：克隆学习仓库到 `scheduler/scheduler/`。完成 `pkg/scheduler/` 三个核心文件的注释汉化（原地追加中文，不增删行，行数保持 589 / 1134 / 665）。由 `go build` 与 gofmt 验证通过；76 处文档行号引用经脚本全量核验仍有效。
 - **2026-11-10（续）**：做第 4 节复测 3 题，判 🟡/🟡/⬜，均未过。追1 问「靠什么反查占坑」、追2 问「Permit Wait 是否阻塞主循环」，待答。
 - **2026-11-10（末）**：追1/追2 均已答完并 fixed，G9/G10 关闭；G8 本轮答对也关闭。追1 过程中额外澄清了 assume 记账的三条出口、`FilteringResourceEventHandler` 把 Update 转译成 OnAdd 的机制、`RemovePod` 与 `ForgetPod` 的不对称、`cleanupAssumedPods` 默认不生效。G1（cache/queue 混用）本轮再现，升级 must-fix。
+- **2026-11-12**：§4 的 A/B/C 第 3 次重测。首轮 B-3 误把 `FinishBinding` 当可见标志（G11 🔴），追问后修正为 `default_binder.go:58`；再确认 `bind` 自身不发请求后 G11 关闭。G12（PreFilter/Score 阶段归属）也修正。**粗颗粒 6 阶段层通过。** 同步生成 `docs/T1-1-pod-lifecycle-6stages.md`。
 
 ## 更新规则
 
