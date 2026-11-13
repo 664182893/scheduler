@@ -1,8 +1,8 @@
 # 进度总表
 
-- 最近更新：2026-11-12
+- 最近更新：2026-11-13
 - 当前任务：**T1-1 追一个 Pod 的一生**
-- 当前粒度：**粗颗粒（6 阶段）已通过 → 待开细颗粒 12 步**
+- 当前粒度：**细颗粒 12 步 · 第 2 步（`schedulingCycle`）进行中**
 - 源码版本：kube-scheduler v1.32.0
 - 源码位置：`D:\code\GoCode\src\scheduler\k8s-v1.32.0`（仓库外，独立 git 仓库）
 - 注释汉化：`scheduler.go` / `schedule_one.go` / `eventhandlers.go` 已完成（追加式，行号不变）
@@ -10,10 +10,43 @@
 
 ## 下次入口
 
-1. 粗颗粒层已通过（A/B/C 全 ✅，G11 关闭）。
-2. **进入细颗粒 12 步**，从第 2 步 `schedule_one.go:138 schedulingCycle` 开始。
-3. 12 步走完做终检：不看图口述完整链路。
-4. G1（cache/queue 混用）仍为 must-fix，在细颗粒过程中持续观察。
+1. 粗颗粒层已通过（A/B/C 全 ✅）。
+2. **细颗粒第 2 步未过**：有 G13/G14（🔴）与 G15（⬜）。
+3. 先答第 2 步的 3 道复测题（见下方），通过后再进第 3 步 `SchedulePod`。
+4. G1（cache/queue 混用）仍为 must-fix，持续观察。
+
+## 细颗粒第 2 步记录（2026-11-13）
+
+对象：`schedulingCycle`（[`schedule_one.go:138-263`](file:///D:/code/GoCode/src/scheduler/k8s-v1.32.0/pkg/scheduler/schedule_one.go#L138)）
+
+### 本轮问答与判定
+
+| 题 | 你的答案 | 判定 | 纠正 |
+|---|---|---|---|
+| 返回值消费方 | 返回值给 `ScheduleOne`；第二个是副本 | 🟡 | 副本的必要性未答。原因：`assume` 会改写 `Spec.NodeName`，污染队列版本 |
+| `SchedulePod` 失败 | 没有退账 | ✅ | 正确，`assume` 尚未执行 |
+| `assume` 失败 | 有清理缓存 | 🔴 | **错**：`AssumePod` 已失败，账未记事，再 `ForgetPod` 会报 `wasn't assumed` |
+| `Reserve` 失败 | 有退账 | 🟡 | 缺具体两个动作：`RunReservePluginsUnreserve` + `Cache.ForgetPod` |
+| `Permit` 失败 | 没有退账 | 🔴 | **说反了**：`:234-237` 明确退账（与 `assume` 弄反） |
+| `Wait` 为何排除 | Wait 当失败会退账，gang 凑不齐 | ✅ | 机制描述准确 |
+
+### 四条出口速查
+
+| # | 出口 | 退账 | Status |
+|---|---|---|---|
+| 1 | `ErrNoNodesAvailable` | 无 | `UnschedulableAndUnresolvable` |
+| 2 | FitError → PostFilter | 无 | `Unschedulable` |
+| 3 | `assume` 失败 | **无** | `Error` |
+| 4 | `Reserve` 失败 | `Unreserve` + `ForgetPod` | `Reject` → `FitError` |
+| 5 | `Permit` 失败 | `Unreserve` + `ForgetPod` | `Reject` → `FitError` |
+
+**口诀：账记上了才要退。**
+
+### 待答复测题
+
+1. `assume` 失败时为什么不调 `ForgetPod`？硬要调会撞上哪一行、报什么错？
+2. `Reserve` 失败与 `Permit` 失败的退账动作完全相同吗？说出两个函数名。
+3. 为什么需要 `podInfo.DeepCopy()`？直接改写原对象，失败重入队时会怎样？
 
 ## 追问复盘（2026-11-10 已答完）
 
@@ -52,7 +85,7 @@
 |---|---|---|---|---|
 | T0-1 | 让调度器说话 | W1 必做 | 🟡 有产出，未验收 | `logs/` 有 v=5 窗口与 describe |
 | T0-2 | 亲手制造一次 FailedScheduling | W1 必做 | 🟡 有产出，未验收 | `logs/08–10` + 失败矩阵 |
-| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | **粗颗粒 6 阶段已通过**；待开细颗粒 12 步 |
+| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | 粗颗粒已过；细颗粒第 2 步进行中（G13/G14 🔴，G15 ⬜） |
 | T1-2 | 找到那个 goroutine 的边界 | W1 弹性 | ⬜ 未开始 | 与 T1-1 第 4/12 步重叠 |
 | T1-3 | 多个插件怎么合并成一个分数 | W2 弹性 | ⬜ 未开始 | |
 | T2-0 | 先把 kube-scheduler 编译出来 | W2 必做 | ⬜ 未开始 | |
@@ -104,7 +137,7 @@
 - [x] 第 1 步编排（`schedule_one.go:65`）
 - [x] 函数字段机制：`NextPod = podQueue.Pop`；`SchedulePod` / `FailureHandler` 是字段
 - [x] **粗颗粒 6 阶段口述（2026-11-12 通过）**
-- [ ] 细颗粒 12 步（第 2–12 步）
+- [~] 细颗粒 12 步：第 2 步（`schedulingCycle`）进行中，待答 3 道复测题
 - [ ] 终检：不看图口述完整链路
 
 ## 盲区台账
@@ -123,6 +156,9 @@
 | G10 | 认为拆分绑定周期是为了避免「绑定失败却写入」 | fixed（追1） |
 | G11 | 把 `FinishBinding` 当成「集群可见」标志 | fixed（2026-11-12） |
 | G12 | PreFilter/Score 被当成独立阶段 | fixed（2026-11-12） |
+| G13 | 误以为 `assume` 失败后要 `ForgetPod` | **open · 🔴** |
+| G14 | 误以为 `Permit` 失败不退账（与 `assume` 弄反） | **open · 🔴** |
+| G15 | 不知道 `DeepCopy` 的必要性 | open · ⬜ |
 
 ## 会话日志
 
@@ -133,6 +169,7 @@
 - **2026-11-10（续）**：做第 4 节复测 3 题，判 🟡/🟡/⬜，均未过。追1 问「靠什么反查占坑」、追2 问「Permit Wait 是否阻塞主循环」，待答。
 - **2026-11-10（末）**：追1/追2 均已答完并 fixed，G9/G10 关闭；G8 本轮答对也关闭。追1 过程中额外澄清了 assume 记账的三条出口、`FilteringResourceEventHandler` 把 Update 转译成 OnAdd 的机制、`RemovePod` 与 `ForgetPod` 的不对称、`cleanupAssumedPods` 默认不生效。G1（cache/queue 混用）本轮再现，升级 must-fix。
 - **2026-11-12**：§4 的 A/B/C 第 3 次重测。首轮 B-3 误把 `FinishBinding` 当可见标志（G11 🔴），追问后修正为 `default_binder.go:58`；再确认 `bind` 自身不发请求后 G11 关闭。G12（PreFilter/Score 阶段归属）也修正。**粗颗粒 6 阶段层通过。** 同步生成 `docs/T1-1-pod-lifecycle-6stages.md`。
+- **2026-11-13**：开细颗粒第 2 步（`schedulingCycle`）。`SchedulePod` 失败不退账、`Wait` 必须排除两项答对；但 `assume` 失败误答为「要清理缓存」、`Permit` 失败误答为「不退账」，两处弄反，新增 G13/G14（🔴），`DeepCopy` 原因未知记 G15（⬜）。待答 3 道复测题。
 
 ## 更新规则
 
