@@ -17,6 +17,7 @@
 *.local
 .DS_Store
 Thumbs.db
+/.agents/source-root.local
 
 # 本地备份（带中文注释的源码，不进仓库）
 /.local-backup/
