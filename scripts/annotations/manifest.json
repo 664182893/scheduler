@@ -1,0 +1,41 @@
+{
+  "version": "v1.32.0",
+  "files": [
+    {
+      "file": "pkg/scheduler/scheduler.go",
+      "map": "pkg__scheduler__scheduler.go.json"
+    },
+    {
+      "file": "pkg/scheduler/schedule_one.go",
+      "map": "pkg__scheduler__schedule_one.go.json"
+    },
+    {
+      "file": "pkg/scheduler/eventhandlers.go",
+      "map": "pkg__scheduler__eventhandlers.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/cache.go",
+      "map": "pkg__scheduler__backend__cache__cache.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/queue/scheduling_queue.go",
+      "map": "pkg__scheduler__backend__queue__scheduling_queue.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/interface.go",
+      "map": "pkg__scheduler__framework__interface.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/types.go",
+      "map": "pkg__scheduler__framework__types.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/runtime/framework.go",
+      "map": "pkg__scheduler__framework__runtime__framework.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/defaultbinder/default_binder.go",
+      "map": "pkg__scheduler__framework__plugins__defaultbinder__default_binder.go.json"
+    }
+  ]
+}

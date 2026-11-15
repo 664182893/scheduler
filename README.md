@@ -35,11 +35,16 @@
 | `plan/lm-roadmap.md` | M 系列 9 张任务卡原文 |
 | `acceptance/T1-1-pod-lifecycle.md` | 当前任务单（可复用模板） |
 | `acceptance/2026-11-07-scheduler-callchain.md` | T1-1 完整验收记录 |
+| `docs/SCHEDULER_STUDY_GUIDE.md` | **源码学习总纲（T1-1 汇编版）**：回顾源码从这里开始 |
+| `docs/review-2026-11-15.md` | 2026-11-15 学习复盘（第 2 步收口 + 自测题） |
 | `docs/SCHEDULER_CALLCHAIN.md` | 主干调用链（36 个节点，带行号） |
 | `docs/SCHEDULER_FAILURE_MATRIX.html` | 同步 / 异步失败与回滚矩阵 |
 | `docs/SOURCE_SNAPSHOT.md` | 源码快照的来源、版本、日志行号对照 |
 | `logs/` | W1 用到的调度日志关键片段 |
 | `scripts/setup-source.*` | 拉取 kube-scheduler v1.32.0 源码 |
+| `scripts/apply-annotations.*` | 重新拉源码后一键恢复中文注释 |
+| `scripts/annotate_comments.py` | 单文件注释映射的列出 / 应用 / 校验 |
+| `scripts/annotations/` | 9 个文件的译文映射 + manifest（不含源码） |
 | `.agents/skills/dialogue-acceptance/SKILL.md` | 对话式验收方法（项目内副本） |
 
 ## 学习路线（W1–W8）

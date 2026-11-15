@@ -2,19 +2,22 @@
 
 - 最近更新：2026-11-15
 - 当前任务：**T1-1 追一个 Pod 的一生**
-- 当前粒度：**细颗粒 12 步 · 第 2 步（`schedulingCycle`）进行中**
+- 当前粒度：**细颗粒 12 步 · 第 3 步（`SchedulePod`）待开始**
 - 源码版本：kube-scheduler v1.32.0
 - 每日执行：见 `plan/daily-plan.md`
 - 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
-- 注释汉化：另一台机器已完成（追加式，行号不变）；2026-11-15 本机重新拉取干净 v1.32.0，注释版备份在 `.local-backup/`
+- 注释汉化：2026-11-15 完成 9 个核心文件（块级追加中文，行数不变）；映射在 `scripts/annotations/`，一键恢复用 `scripts/apply-annotations.*`；干净原件在 `.local-backup/clean/`，带注释版本在 `pkg/scheduler/`
 - 主干文档：`docs/T1-1-pod-lifecycle-6stages.md`（带行号超链接）
+- 回顾总纲：`docs/SCHEDULER_STUDY_GUIDE.md`（汇编版，含机制、失败矩阵、自测、行号速查）
+- 当日复盘：`docs/review-2026-11-15.md`
 
 ## 下次入口
 
 1. 粗颗粒层已通过（A/B/C 全 ✅）。
-2. **细颗粒第 2 步未过**：有 G13/G14（🔴）与 G15（⬜）。
-3. 先答第 2 步的 3 道复测题（见下方），通过后再进第 3 步 `SchedulePod`。
+2. **细颗粒第 2 步已通过**（2026-11-15，G13/G14/G15 关闭）。
+3. 下一步：第 3 步 `SchedulePod`（`schedule_one.go:411`）——3 个返回值、单节点提前返回。
 4. G1（cache/queue 混用）仍为 must-fix，持续观察。
+5. 今日复盘：`docs/review-2026-11-15.md`。
 
 ## 细颗粒第 2 步记录（2026-11-13）
 
@@ -49,6 +52,16 @@
 2. `Reserve` 失败与 `Permit` 失败的退账动作完全相同吗？说出两个函数名。
 3. 为什么需要 `podInfo.DeepCopy()`？直接改写原对象，失败重入队时会怎样？
 
+### 复测结果（2026-11-15）
+
+| # | 判定 | 要点 |
+|---|---|---|
+| 1 | ✅ | `assume` 失败不调 `ForgetPod`；硬调会命中 `cache.go:422` 的 `wasn't assumed so cannot be forgotten` |
+| 2 | ✅ | `Reserve` / `Permit` 失败都是 `RunReservePluginsUnreserve` + `Cache.ForgetPod`；`Unreserve` 逆序（`framework.go:1427`） |
+| 3 | ✅ | `DeepCopy` 防止 `assume` 写 `NodeName` 污染 informer；不复制会让 `handleSchedulingFailure` 在 `:1070` 误判已绑定，跳过 `:1078` 重排队 |
+
+**G13 / G14 / G15 → fixed。** 口诀：**账记上了才要退；失败重排队看 informer 的真相，不看调度器的副本。**
+
 ## 追问复盘（2026-11-10 已答完）
 
 | # | 结果 | 要点 |
@@ -74,7 +87,7 @@
 |---|---|---|
 | 1 | 🟡 模糊 | `Run` 只答出起 goroutine；漏 `SchedulingQueue.Run`（`scheduler.go:466`）与收尾 `Close`（`:476-480`）；入队链路完全未答（G1/G8） |
 | 2 | 🟡 模糊 | 两个调用答对（`framework.go:1370` / `:1454`）；Wait 行为未答（G9） |
-| 3 | ⬜ 空白 | 退账完全不清楚（`handleSchedulingFailure` @ `schedule_one.go:1053`）（G10） |
+| 3 | ⬜ 空白 | 退账完全不清楚（`handleSchedulingFailure` @ `schedule_one.go:1023`）（G10） |
 
 **结论**：三题全未过。随后通过 2 道追问 + 1 轮定点复测补齐 G9/G10（均已 fixed），G8 已答对可关。**G1 仍在，已升级 must-fix**（cache 与 queue 混用，出现 2 次以上）。
 
@@ -86,7 +99,7 @@
 |---|---|---|---|---|
 | T0-1 | 让调度器说话 | W1 必做 | 🟡 有产出，未验收 | `logs/` 有 v=5 窗口与 describe |
 | T0-2 | 亲手制造一次 FailedScheduling | W1 必做 | 🟡 有产出，未验收 | `logs/08–10` + 失败矩阵 |
-| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | 粗颗粒已过；细颗粒第 2 步进行中（G13/G14 🔴，G15 ⬜） |
+| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | 粗颗粒已过；细颗粒第 2 步已过，下一步第 3 步 `SchedulePod` |
 | T1-2 | 找到那个 goroutine 的边界 | W1 弹性 | ⬜ 未开始 | 与 T1-1 第 4/12 步重叠 |
 | T1-3 | 多个插件怎么合并成一个分数 | W2 弹性 | ⬜ 未开始 | |
 | T2-0 | 先把 kube-scheduler 编译出来 | W2 必做 | ⬜ 未开始 | |
@@ -138,7 +151,8 @@
 - [x] 第 1 步编排（`schedule_one.go:65`）
 - [x] 函数字段机制：`NextPod = podQueue.Pop`；`SchedulePod` / `FailureHandler` 是字段
 - [x] **粗颗粒 6 阶段口述（2026-11-12 通过）**
-- [~] 细颗粒 12 步：第 2 步（`schedulingCycle`）进行中，待答 3 道复测题
+- [x] 细颗粒第 2 步（`schedulingCycle`，2026-11-15 通过）
+- [~] 细颗粒第 3 步（`SchedulePod`）
 - [ ] 终检：不看图口述完整链路
 
 ## 盲区台账
@@ -157,9 +171,9 @@
 | G10 | 认为拆分绑定周期是为了避免「绑定失败却写入」 | fixed（追1） |
 | G11 | 把 `FinishBinding` 当成「集群可见」标志 | fixed（2026-11-12） |
 | G12 | PreFilter/Score 被当成独立阶段 | fixed（2026-11-12） |
-| G13 | 误以为 `assume` 失败后要 `ForgetPod` | **open · 🔴** |
-| G14 | 误以为 `Permit` 失败不退账（与 `assume` 弄反） | **open · 🔴** |
-| G15 | 不知道 `DeepCopy` 的必要性 | open · ⬜ |
+| G13 | 误以为 `assume` 失败后要 `ForgetPod` | fixed（2026-11-15） |
+| G14 | 误以为 `Permit` 失败不退账（与 `assume` 弄反） | fixed（2026-11-15） |
+| G15 | 不知道 `DeepCopy` 的必要性 | fixed（2026-11-15） |
 
 ## 会话日志
 
@@ -172,6 +186,10 @@
 - **2026-11-12**：§4 的 A/B/C 第 3 次重测。首轮 B-3 误把 `FinishBinding` 当可见标志（G11 🔴），追问后修正为 `default_binder.go:58`；再确认 `bind` 自身不发请求后 G11 关闭。G12（PreFilter/Score 阶段归属）也修正。**粗颗粒 6 阶段层通过。** 同步生成 `docs/T1-1-pod-lifecycle-6stages.md`。
 - **2026-11-13**：开细颗粒第 2 步（`schedulingCycle`）。`SchedulePod` 失败不退账、`Wait` 必须排除两项答对；但 `assume` 失败误答为「要清理缓存」、`Permit` 失败误答为「不退账」，两处弄反，新增 G13/G14（🔴），`DeepCopy` 原因未知记 G15（⬜）。待答 3 道复测题。
 - **2026-11-15**：本机重新拉取 v1.32.0 源码。`eventhandlers.go` / `scheduler.go` / `schedule_one.go` 三个带注释的版本已还原为干净源码，带注释版本备份在本地 `.local-backup/`（未入库）。`pkg/scheduler` 与模块缓存逐文件一致，文档行号恢复有效。
+- **2026-11-15（续）**：整理 `docs/SCHEDULER_STUDY_GUIDE.md`（T1-1 汇编版）。用模块缓存 `k8s.io/kubernetes@v1.32.0` 全量核对行号，修正旧记录中 6 处引用（`go func` 121→120、`handleSchedulingFailure` 1053→1023、单节点短路 437→438、`addPodToCache` 215→203、`RunReservePluginsUnreserve` 1298→1414、Score 并发粒度表述）。顺带补查 T0-2 交付物：`FailedScheduling` 消息由 `framework/types.go:520` + `FitError.Error()`（`:543-593`）拼出。
+- **2026-11-15（晚）**：重做三个核心文件的注释汉化（`scheduler.go` / `schedule_one.go` / `eventhandlers.go`）。译文挂在每个英文注释块最后一行，行数保持 589 / 1134 / 665，49 / 95 / 28 个注释块全部覆盖。`gofmt -l` 无输出、`go build ./pkg/scheduler/` 通过、逐行前缀校验 0 违例。干净原件存 `.local-backup/clean/`，同版本备份已更新到 `.local-backup/`。
+- **2026-11-15（夜）**：把汉化扩到 9 个核心文件（新增 `cache.go` / `scheduling_queue.go` / `framework/interface.go` / `framework/types.go` / `framework/runtime/framework.go` / `default_binder.go`），共 792 个注释块、8535 行，行数全部不变。新增 `scripts/annotate_comments.py`（单文件列块/应用/校验）、`scripts/apply_annotations.py` + `apply-annotations.sh/.ps1`（按 manifest 一键恢复）、`scripts/annotations/`（9 份译文映射）。校验：9 个文件 `--check` 全过、`gofmt` 无输出、`go build ./pkg/scheduler/...` 通过、映射重放与当前文件逐字节一致。
+- **2026-11-15（学习收口）**：完成细颗粒第 2 步复测：`assume` 失败不退账 ✅、`Reserve`/`Permit` 失败退账 ✅、`DeepCopy` 防 informer 污染 ✅。G13/G14/G15 关闭。生成复盘笔记 `docs/review-2026-11-15.md`。
 
 ## 更新规则
 

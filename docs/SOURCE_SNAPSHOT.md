@@ -32,29 +32,69 @@ scheduler/
 └── LICENSE                        # Apache-2.0
 ```
 
-> 说明：这是本地源码工作副本，位于 `D:\code\GoCode\src\scheduler\k8s-v1.32.0`（独立 git 仓库，tag `v1.32.0`）。实测 `go build ./pkg/scheduler/` 通过（Go 1.23.0）。
+> 说明：源码副本位置因机器而异：
+> - **本机（2026-11-15）**：仓库根就是源码根，即 `pkg/scheduler/`；路径记录在 `.agents/source-root.local`。
+> - 另一台机器：`D:\code\GoCode\src\scheduler\k8s-v1.32.0`（独立 git 仓库，tag `v1.32.0`）。
+> - `scripts/setup-source.*` 默认拉取到 `<本仓库>/kubernetes-v1.32.0/`。
 >
-> **注意目录层级**：仓库默认的 `scripts/setup-source.ps1` 会把源码拉到 `<本仓库>/kubernetes-v1.32.0/`，但当前实际快照在**仓库外**的上一级 `k8s-v1.32.0/`。本文所有 `文件:行号` 均以 `k8s-v1.32.0/pkg/scheduler/` 为准。
+> 本文所有 `文件:行号` 均以 v1.32.0 的 `pkg/scheduler/` 为准，与源码根放在哪里无关。
 
-## 注释汉化（2026-11-10）
+## 注释汉化（2026-11-15）
 
-`pkg/scheduler/` 下三个核心文件已完成中英对照汉化：**在原英文注释行末尾追加中文译文，英文原文保留，不增删任何行**。
+`pkg/scheduler/` 下 **9 个核心文件**已完成中英对照汉化：**在每个英文注释块最后一行的末尾追加 ` // 中文译文`，英文原文与行数完全不变**。
 
-| 文件 | 总行数 | 汉化处数 |
+| 文件 | 总行数 | 注释块 |
 |---|---|---|
-| `scheduler.go` | 589 | 93 |
-| `schedule_one.go` | 1134 | 180 |
-| `eventhandlers.go` | 665 | 84 |
+| `scheduler.go` | 589 | 49 |
+| `schedule_one.go` | 1134 | 95 |
+| `eventhandlers.go` | 665 | 28 |
+| `backend/cache/cache.go` | 760 | 54 |
+| `backend/queue/scheduling_queue.go` | 1397 | 155 |
+| `framework/interface.go` | 954 | 156 |
+| `framework/types.go` | 1302 | 139 |
+| `framework/runtime/framework.go` | 1671 | 111 |
+| `framework/plugins/defaultbinder/default_binder.go` | 63 | 5 |
+| **合计** | **8535** | **792** |
 
-正因为「只追加、不增行」，**本文所有 `文件:行号` 在汉化后依然精确有效**，无需换算。校验方式：
+因为「只追加、不增行」，**本文所有 `文件:行号` 在汉化后依然精确有效**，无需换算。
+
+### 译文映射与一键恢复
+
+译文不写进文档，存在 `scripts/annotations/`：
+
+- `manifest.json`：9 个文件与映射文件的对应关系，及源码版本（v1.32.0）。
+- `*.json`：`key` = 注释块最后一行行号（1-based），`value` = 中文译文；只含译文，不含源码。
+
+重新拉源码后，一条命令恢复：
 
 ```bash
-cd D:/code/GoCode/src/scheduler/k8s-v1.32.0
-diff <(git show HEAD:pkg/scheduler/schedule_one.go | sed -E 's#//.*$##') ...
-gofmt -l pkg/scheduler/     # 无输出 = 格式合规
+cd /c/Users/Wp_/go/src/scheduler
+bash scripts/apply-annotations.sh                # 用 .agents/source-root.local
+bash scripts/apply-annotations.sh --source-root ../kubernetes-v1.32.0
 ```
 
-格式约定：`// English original. // 中文译文`；空注释行保持纯 `//`；许可头、`//go:build`、`//nolint` 不译。
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/apply-annotations.ps1
+powershell -ExecutionPolicy Bypass -File scripts/apply-annotations.ps1 -SourceRoot D:\code\GoCode\src\scheduler\k8s-v1.32.0
+```
+
+脚本会跳过已含中文的文件，逐文件校验行数、代码前缀、注释覆盖和 `gofmt`。
+
+### 校验方式
+
+```bash
+cd /c/Users/Wp_/go/src/scheduler
+
+gofmt -l pkg/scheduler/          # 无输出 = 格式合规
+go build ./pkg/scheduler/...     # 通过
+
+# 行数与代码不变：每个带注释的行都以干净原件对应行为前缀
+python scripts/apply_annotations.py --source-root .   # 已汉化时全部 SKIP
+```
+
+处理前的干净原件在 `.local-backup/clean/<相对路径>`，供回退。
+
+格式约定：`// English original. // 中文译文`；译文挂在注释块最后一行；空注释行保持纯 `//`；许可头、`//go:build`、`//nolint` 不译。
 
 ## 日志行号 → 源码（对应本次 v=5 日志）
 
