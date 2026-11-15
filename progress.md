@@ -1,11 +1,11 @@
 # 进度总表
 
-- 最近更新：2026-11-13
+- 最近更新：2026-11-15
 - 当前任务：**T1-1 追一个 Pod 的一生**
 - 当前粒度：**细颗粒 12 步 · 第 2 步（`schedulingCycle`）进行中**
 - 源码版本：kube-scheduler v1.32.0
-- 源码位置：`D:\code\GoCode\src\scheduler\k8s-v1.32.0`（仓库外，独立 git 仓库）
-- 注释汉化：`scheduler.go` / `schedule_one.go` / `eventhandlers.go` 已完成（追加式，行号不变）
+- 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
+- 注释汉化：另一台机器已完成（追加式，行号不变）；2026-11-15 本机重新拉取干净 v1.32.0，注释版备份在 `.local-backup/`
 - 主干文档：`docs/T1-1-pod-lifecycle-6stages.md`（带行号超链接）
 
 ## 下次入口
@@ -170,6 +170,7 @@
 - **2026-11-10（末）**：追1/追2 均已答完并 fixed，G9/G10 关闭；G8 本轮答对也关闭。追1 过程中额外澄清了 assume 记账的三条出口、`FilteringResourceEventHandler` 把 Update 转译成 OnAdd 的机制、`RemovePod` 与 `ForgetPod` 的不对称、`cleanupAssumedPods` 默认不生效。G1（cache/queue 混用）本轮再现，升级 must-fix。
 - **2026-11-12**：§4 的 A/B/C 第 3 次重测。首轮 B-3 误把 `FinishBinding` 当可见标志（G11 🔴），追问后修正为 `default_binder.go:58`；再确认 `bind` 自身不发请求后 G11 关闭。G12（PreFilter/Score 阶段归属）也修正。**粗颗粒 6 阶段层通过。** 同步生成 `docs/T1-1-pod-lifecycle-6stages.md`。
 - **2026-11-13**：开细颗粒第 2 步（`schedulingCycle`）。`SchedulePod` 失败不退账、`Wait` 必须排除两项答对；但 `assume` 失败误答为「要清理缓存」、`Permit` 失败误答为「不退账」，两处弄反，新增 G13/G14（🔴），`DeepCopy` 原因未知记 G15（⬜）。待答 3 道复测题。
+- **2026-11-15**：本机重新拉取 v1.32.0 源码。`eventhandlers.go` / `scheduler.go` / `schedule_one.go` 三个带注释的版本已还原为干净源码，带注释版本备份在本地 `.local-backup/`（未入库）。`pkg/scheduler` 与模块缓存逐文件一致，文档行号恢复有效。
 
 ## 更新规则
 
