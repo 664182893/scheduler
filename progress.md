@@ -4,6 +4,7 @@
 - 当前任务：**T1-1 追一个 Pod 的一生**
 - 当前粒度：**细颗粒 12 步 · 第 2 步（`schedulingCycle`）进行中**
 - 源码版本：kube-scheduler v1.32.0
+- 每日执行：见 `plan/daily-plan.md`
 - 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
 - 注释汉化：另一台机器已完成（追加式，行号不变）；2026-11-15 本机重新拉取干净 v1.32.0，注释版备份在 `.local-backup/`
 - 主干文档：`docs/T1-1-pod-lifecycle-6stages.md`（带行号超链接）

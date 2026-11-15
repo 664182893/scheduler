@@ -29,6 +29,7 @@
 | 路径 | 用途 |
 |---|---|
 | `progress.md` | 全局进度：16 张卡状态、当前任务、待答、盲区、下次入口 |
+| `plan/daily-plan.md` | 每日执行计划（滚动）：今天做什么、本周里程碑、打卡表 |
 | `plan/scheduler-roadmap.md` | T 系列 16 张任务卡原文（考纲，勿改） |
 | `plan/volcano-roadmap.md` | V 系列 8 张任务卡原文 |
 | `plan/lm-roadmap.md` | M 系列 9 张任务卡原文 |
