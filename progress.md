@@ -1,8 +1,8 @@
 # 进度总表
 
-- 最近更新：2026-11-15
+- 最近更新：2026-11-16
 - 当前任务：**T1-1 追一个 Pod 的一生**
-- 当前粒度：**细颗粒 12 步 · 第 3 步（`SchedulePod`）待开始**
+- 当前粒度：**细颗粒 12 步 · 第 3 步（`schedulePod`）已验收，3 题全 🟡 待补测**
 - 源码版本：kube-scheduler v1.32.0
 - 每日执行：见 `plan/daily-plan.md`
 - 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
@@ -13,11 +13,10 @@
 
 ## 下次入口
 
-1. 粗颗粒层已通过（A/B/C 全 ✅）。
-2. **细颗粒第 2 步已通过**（2026-11-15，G13/G14/G15 关闭）。
-3. 下一步：第 3 步 `SchedulePod`（`schedule_one.go:411`）——3 个返回值、单节点提前返回。
+1. 粗颗粒层已通过；细颗粒第 2 步已通过（G13/G14/G15 关闭）。
+2. **第 3 步 `schedulePod` 已验收但 3 题全 🟡**：新增 G16（`ErrNoNodesAvailable` / `FitError` 分支分叉）、G17（trace 日志级别）。
+3. 下一步：答第 3 步的 1 道复测题（见「细颗粒第 3 步记录」），过则进第 4 步 `findNodesThatFitPod`（`schedule_one.go:463`）。
 4. G1（cache/queue 混用）仍为 must-fix，持续观察。
-5. 今日复盘：`docs/review-2026-11-15.md`。
 
 ## 细颗粒第 2 步记录（2026-11-13）
 
@@ -62,12 +61,50 @@
 
 **G13 / G14 / G15 → fixed。** 口诀：**账记上了才要退；失败重排队看 informer 的真相，不看调度器的副本。**
 
+## 细颗粒第 3 步记录（2026-11-16）
+
+对象：`schedulePod`（[`schedule_one.go:411-459`](file:///D:/code/GoCode/src/scheduler/k8s-v1.32.0/pkg/scheduler/schedule_one.go#L411)）。它只是**编排函数**，自己不实现过滤/打分。
+
+### 本轮问答与判定
+
+| 题 | 你的答案 | 判定 | 纠正 |
+|---|---|---|---|
+| `ErrNoNodesAvailable` vs `FitError` | 前者 nodeinfo 为空即集群无节点；后者过了 filter 但没有可行节点；区别是是否经过 filter | 🟡 | 判断对，但未答**下游分支差异**（见下表） |
+| `1 + diagnosis.NodeToStatus.Len()` | 不理解，猜「记录 prefilter/filter 过滤过的节点」 | 🟡 | 方向对。实际 = 可行节点 + 被 Filter 拒绝的节点，**只用于 `:325` 的 V(2) 日志**，不参与决策 |
+| `trace.LogIfLong(100ms)` | 调度阈值，需要 klog ≥ 4 才能看到失败原因 | 🟡 | **日志级别说错**：走 `klog.Info`（V0），默认就打印；V(4) 只影响**步内细节**是否全打 |
+
+### 四处短路（本步核心）
+
+| 位置 | 条件 | 返回 | 后果 |
+|---|---|---|---|
+| `:414` | `UpdateSnapshot` 失败 | 原样 err | 走 `AsStatus` → Error |
+| `:419` | 快照 0 节点 | `ErrNoNodesAvailable` | `:153` 特判 → `UnschedulableAndUnresolvable`，**跳过抢占** |
+| `:429` | 可行节点 0 个 | `*FitError` | `:169` 起跑 PostFilter（**抢占**） |
+| `:438` | 可行节点恰好 1 个 | 直接返回 | **跳过 `prioritizeNodes` 与 `selectHost`** |
+
+`UnschedulableAndUnresolvable` = 「换什么节点都没用」；`Unschedulable` = 「暂时不行，资源变了再试」。
+
+### 已澄清事实
+
+1. `EvaluatedNodes = 可行节点数 + 被 Filter 拒绝的节点数`。单节点写 `1 + Len()`（`:441`），多节点写 `len(feasibleNodes) + Len()`（`:456`），同一公式。
+2. `NodeToStatus` 由 `findNodesThatPassFilters` 在 `:664` 逐节点写入；`Len()`（`framework/interface.go:104`）只数 map 里的节点，**不含** `absentNodesStatus`。
+3. `LogIfLong`（`k8s.io/utils/trace`）阈值语义：总耗时 ≥ 100ms 才打印，且直接用 `klog.Info`（**V0**），默认日志可见。`writeItem` 里 `stepDuration >= stepThreshold || klogV(4)` —— 开 V(4) 才打印**所有** step。
+4. trace 只给**耗时**，不给失败原因。失败原因看 `FitError.Diagnosis`（`NodeToStatus` / `UnschedulablePlugins`），对外表现为 `FailedScheduling` 事件。
+
+### 待答复测题
+
+集群 3 个节点，Pod 调度失败：
+
+1. 如果一个节点都没有 → 哪个出口？会不会抢占？
+2. 如果 3 个节点都在但都因 `Insufficient cpu` 被拒 → 哪个出口？`EvaluatedNodes` 多少？
+3. 第二种情况下默认日志级别能看到什么？开 `-v=4` 多看到什么？
+
 ## 追问复盘（2026-11-10 已答完）
 
 | # | 结果 | 要点 |
 |---|---|---|
 | 追1 | ✅ fixed（G10 关闭） | 记账本是 `cache.go:67` 的 `assumedPods sets.Set[string]`；销账两条路：`AddPod`（成功，经过滤器把 Update 转译成 OnAdd）与 `ForgetPod`（失败）。三条出口全汇入 `removePod`（`cache.go:460`） |
-| 追2 | ✅ fixed（G9 关闭） | `RunPermitPlugins` 不阻塞，只登记 `waitingPods` 后返回 Wait；阻塞发生在 `WaitOnPermit`（`framework.go:1514`），跑在 `schedule_one.go:121` 起的 binding goroutine 里 |
+| 追2 | ✅ fixed（G9 关闭） | `RunPermitPlugins` 不阻塞，只登记 `waitingPods` 后返回 Wait；阻塞发生在 `WaitOnPermit`（`framework.go:1514`），跑在 `schedule_one.go:120` 起的 binding goroutine 里 |
 
 ### 本轮新增已澄清事实
 
@@ -152,7 +189,7 @@
 - [x] 函数字段机制：`NextPod = podQueue.Pop`；`SchedulePod` / `FailureHandler` 是字段
 - [x] **粗颗粒 6 阶段口述（2026-11-12 通过）**
 - [x] 细颗粒第 2 步（`schedulingCycle`，2026-11-15 通过）
-- [~] 细颗粒第 3 步（`SchedulePod`）
+- [~] 细颗粒第 3 步（`schedulePod`）：3 题全 🟡，待答 1 道复测题
 - [ ] 终检：不看图口述完整链路
 
 ## 盲区台账
@@ -174,6 +211,8 @@
 | G13 | 误以为 `assume` 失败后要 `ForgetPod` | fixed（2026-11-15） |
 | G14 | 误以为 `Permit` 失败不退账（与 `assume` 弄反） | fixed（2026-11-15） |
 | G15 | 不知道 `DeepCopy` 的必要性 | fixed（2026-11-15） |
+| G16 | 不知道 `ErrNoNodesAvailable` 与 `FitError` 会导致「是否抢占」的分叉 | open（2026-11-16） |
+| G17 | 误以为 trace 需要 `-v=4`；混淆 trace（耗时）与 `FitError`（原因） | open（2026-11-16） |
 
 ## 会话日志
 
@@ -190,6 +229,7 @@
 - **2026-11-15（晚）**：重做三个核心文件的注释汉化（`scheduler.go` / `schedule_one.go` / `eventhandlers.go`）。译文挂在每个英文注释块最后一行，行数保持 589 / 1134 / 665，49 / 95 / 28 个注释块全部覆盖。`gofmt -l` 无输出、`go build ./pkg/scheduler/` 通过、逐行前缀校验 0 违例。干净原件存 `.local-backup/clean/`，同版本备份已更新到 `.local-backup/`。
 - **2026-11-15（夜）**：把汉化扩到 9 个核心文件（新增 `cache.go` / `scheduling_queue.go` / `framework/interface.go` / `framework/types.go` / `framework/runtime/framework.go` / `default_binder.go`），共 792 个注释块、8535 行，行数全部不变。新增 `scripts/annotate_comments.py`（单文件列块/应用/校验）、`scripts/apply_annotations.py` + `apply-annotations.sh/.ps1`（按 manifest 一键恢复）、`scripts/annotations/`（9 份译文映射）。校验：9 个文件 `--check` 全过、`gofmt` 无输出、`go build ./pkg/scheduler/...` 通过、映射重放与当前文件逐字节一致。
 - **2026-11-15（学习收口）**：完成细颗粒第 2 步复测：`assume` 失败不退账 ✅、`Reserve`/`Permit` 失败退账 ✅、`DeepCopy` 防 informer 污染 ✅。G13/G14/G15 关闭。生成复盘笔记 `docs/review-2026-11-15.md`。
+- **2026-11-16**：开细颗粒第 3 步（`schedulePod`）。三题均 🟡：`ErrNoNodesAvailable`/`FitError` 的区分判断对但未答抢占分支；`EvaluatedNodes` 公式只猜出一半；trace 日志级别说成需要 `-v=4`（实际 `klog.Info` V0）。新增 G16/G17。顺带修正 `go func` 行号 121→120。
 
 ## 更新规则
 
