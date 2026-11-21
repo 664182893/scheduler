@@ -9,7 +9,7 @@
 - 注释汉化：2026-11-18 本机重新拉取干净 v1.32.0，`pkg/scheduler/` 已恢复为原始源码（行号有效）；9 个文件的译文映射保留在 `scripts/annotations/`，需要时用 `scripts/apply-annotations.*` 一键恢复
 - 主干文档：`docs/T1-1-pod-lifecycle-6stages.md`（带行号超链接）
 - 回顾总纲：`docs/SCHEDULER_STUDY_GUIDE.md`（汇编版，含机制、失败矩阵、自测、行号速查）
-- 当日复盘：`docs/review-2026-11-15.md`
+- 当日复盘：`docs/review-2026-11-18.md`（11-15 的见 `docs/review-2026-11-15.md`）
 
 ## 下次入口
 
@@ -255,6 +255,7 @@
 - **2026-11-18（第 3 步复测）**：Q1 ✅；Q2 🟡（漏默认 PostFilter/抢占、`EvaluatedNodes=0`）；Q3 🟡（默认级别与 V3/V4 说错，G17 复现，升级 must-fix）。待答 2 道追问。
 - **2026-11-18**：本机拉取远端最新 `03ea59b`，同步第 3 步记录；再次用模块缓存恢复 9 个核心文件为干净 v1.32.0，`pkg/scheduler` 与模块缓存逐文件一致。注释映射保留在 `scripts/annotations/`。
 - **2026-11-18（第 3 步收口）**：追问答完；纠正最终 Status 为 `NewStatus(Unschedulable).WithError(err)`（`:188`），`WithPlugin` 在 `RunPostFilterPlugins`（`framework.go:961`）；确认 trace 默认阈值与 V3/V4 关系。G16/G17 关闭，第 3 步通过。
+- **2026-11-18（复盘）**：生成 `docs/review-2026-11-18.md`，覆盖 `schedulePod` 四短路、`ErrNoNodesAvailable`/`FitError`、trace vs FitError、PreFilter/Filter/PostFilter 分工。
 
 ## 更新规则
 
