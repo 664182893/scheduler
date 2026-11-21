@@ -1,12 +1,12 @@
 # 进度总表
 
-- 最近更新：2026-11-16
+- 最近更新：2026-11-18
 - 当前任务：**T1-1 追一个 Pod 的一生**
 - 当前粒度：**细颗粒 12 步 · 第 3 步（`schedulePod`）已验收，3 题全 🟡 待补测**
 - 源码版本：kube-scheduler v1.32.0
 - 每日执行：见 `plan/daily-plan.md`
 - 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
-- 注释汉化：2026-11-15 完成 9 个核心文件（块级追加中文，行数不变）；映射在 `scripts/annotations/`，一键恢复用 `scripts/apply-annotations.*`；干净原件在 `.local-backup/clean/`，带注释版本在 `pkg/scheduler/`
+- 注释汉化：2026-11-18 本机重新拉取干净 v1.32.0，`pkg/scheduler/` 已恢复为原始源码（行号有效）；9 个文件的译文映射保留在 `scripts/annotations/`，需要时用 `scripts/apply-annotations.*` 一键恢复
 - 主干文档：`docs/T1-1-pod-lifecycle-6stages.md`（带行号超链接）
 - 回顾总纲：`docs/SCHEDULER_STUDY_GUIDE.md`（汇编版，含机制、失败矩阵、自测、行号速查）
 - 当日复盘：`docs/review-2026-11-15.md`
@@ -20,7 +20,7 @@
 
 ## 细颗粒第 2 步记录（2026-11-13）
 
-对象：`schedulingCycle`（[`schedule_one.go:138-263`](file:///D:/code/GoCode/src/scheduler/k8s-v1.32.0/pkg/scheduler/schedule_one.go#L138)）
+对象：`schedulingCycle`（[`schedule_one.go:138-263`](https://github.com/kubernetes/kubernetes/blob/v1.32.0/pkg/scheduler/schedule_one.go#L138)）
 
 ### 本轮问答与判定
 
@@ -63,7 +63,7 @@
 
 ## 细颗粒第 3 步记录（2026-11-16）
 
-对象：`schedulePod`（[`schedule_one.go:411-459`](file:///D:/code/GoCode/src/scheduler/k8s-v1.32.0/pkg/scheduler/schedule_one.go#L411)）。它只是**编排函数**，自己不实现过滤/打分。
+对象：`schedulePod`（[`schedule_one.go:411-459`](https://github.com/kubernetes/kubernetes/blob/v1.32.0/pkg/scheduler/schedule_one.go#L411)）。它只是**编排函数**，自己不实现过滤/打分。
 
 ### 本轮问答与判定
 
@@ -230,6 +230,7 @@
 - **2026-11-15（夜）**：把汉化扩到 9 个核心文件（新增 `cache.go` / `scheduling_queue.go` / `framework/interface.go` / `framework/types.go` / `framework/runtime/framework.go` / `default_binder.go`），共 792 个注释块、8535 行，行数全部不变。新增 `scripts/annotate_comments.py`（单文件列块/应用/校验）、`scripts/apply_annotations.py` + `apply-annotations.sh/.ps1`（按 manifest 一键恢复）、`scripts/annotations/`（9 份译文映射）。校验：9 个文件 `--check` 全过、`gofmt` 无输出、`go build ./pkg/scheduler/...` 通过、映射重放与当前文件逐字节一致。
 - **2026-11-15（学习收口）**：完成细颗粒第 2 步复测：`assume` 失败不退账 ✅、`Reserve`/`Permit` 失败退账 ✅、`DeepCopy` 防 informer 污染 ✅。G13/G14/G15 关闭。生成复盘笔记 `docs/review-2026-11-15.md`。
 - **2026-11-16**：开细颗粒第 3 步（`schedulePod`）。三题均 🟡：`ErrNoNodesAvailable`/`FitError` 的区分判断对但未答抢占分支；`EvaluatedNodes` 公式只猜出一半；trace 日志级别说成需要 `-v=4`（实际 `klog.Info` V0）。新增 G16/G17。顺带修正 `go func` 行号 121→120。
+- **2026-11-18**：本机拉取远端最新 `03ea59b`，同步第 3 步记录；再次用模块缓存恢复 9 个核心文件为干净 v1.32.0，`pkg/scheduler` 与模块缓存逐文件一致。注释映射保留在 `scripts/annotations/`。
 
 ## 更新规则
 
