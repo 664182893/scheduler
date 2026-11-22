@@ -1,0 +1,10 @@
+{
+  "17": "profile 包定义调度 Profile",
+  "35": "RecorderFactory 为给定调度器名称构建事件记录器",
+  "38": "依据给定配置构建 Profile",
+  "46": "Map 保存以调度器名称为索引的 framework",
+  "49": "依据配置创建以名称为索引的 framework 集合",
+  "68": "返回该 profile 是否处理给定的调度器名称",
+  "74": "关闭此 map 中注册的所有 framework",
+  "86": "为事件广播器返回 RecorderFactory"
+}

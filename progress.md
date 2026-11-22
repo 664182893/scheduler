@@ -2,11 +2,11 @@
 
 - 最近更新：2026-11-22
 - 当前任务：**T1-1 追一个 Pod 的一生**
-- 当前粒度：**细颗粒 12 步 · 第 3 步（`schedulePod`）已通过；下一步第 4 步（`findNodesThatFitPod`）**
+- 当前粒度：**细颗粒 12 步 · 第 5 步（`RunPreFilterPlugins`）已通过；下一步第 6 步（`findNodesThatPassFilters`）**
 - 源码版本：kube-scheduler v1.32.0
 - 每日执行：见 `plan/daily-plan.md`
 - 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
-- 注释汉化：2026-11-22 已完成调度器非测试源码 124 个文件（`pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**`，排除 `*_test.go`）的中文注释；映射在 `scripts/annotations/`，一键恢复用 `scripts/apply-annotations.*`
+- 注释汉化：2026-11-22 已完成调度器全部 Go 源码 177 个文件（含 `_test.go`；`pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**`）的注释汉化（`//` 注释块、行尾 `//`、`/* ... */` 块注释）；映射与块补丁在 `scripts/annotations/`，一键恢复用 `scripts/apply-annotations.*`
 - 主干文档：`docs/T1-1-pod-lifecycle-6stages.md`（带行号超链接）
 - 回顾总纲：`docs/SCHEDULER_STUDY_GUIDE.md`（汇编版，含机制、失败矩阵、自测、行号速查）
 - 当日复盘：`docs/review-2026-11-18.md`（11-15 的见 `docs/review-2026-11-15.md`）
@@ -14,9 +14,9 @@
 
 ## 下次入口
 
-1. 粗颗粒层与细颗粒第 2、3 步已通过（G13–G17 关闭）。
-2. 下一步：第 4 步 `findNodesThatFitPod`（`schedule_one.go:463`）——PreFilter / Filter / Diagnosis 的编排。
-3. G1（cache/queue 混用）仍为 must-fix，持续观察。
+1. 粗颗粒层与细颗粒第 2–5 步已通过（G13–G21 关闭）。
+2. 下一步：第 6 步 `findNodesThatPassFilters`（`schedule_one.go:591`）——并行 Filter、提前 cancel、nominated pods 两轮。
+3. G1（cache/queue 混用）仍为 must-fix。
 
 ## 细颗粒第 2 步记录（2026-11-13）
 
@@ -121,6 +121,54 @@
 
 **G16 / G17 → fixed。第 3 步通过。**
 
+## 细颗粒第 4 步记录（2026-11-22）
+
+对象：`findNodesThatFitPod`（`schedule_one.go:463-545`）
+
+### 本轮问答与判定
+
+| 题 | 你的答案 | 判定 | 纠正 |
+|---|---|---|---|
+| 4-1 PreFilter 两个失败分支 | Rejected vs Error；Rejected 只写 `PreFilterMsg`；Error 直接返回 diagnosis | 🟡 | Rejected 要做三件事：`SetAbsentNodesStatus(s)`、`PreFilterMsg=s.Message()`、`AddPluginStatus(s)`，返回 `nil, diagnosis, nil`；Error 返回 `nil, diagnosis, s.AsError()`。Rejected 是正常不可调度，Error 是插件故障 |
+| 4-2 PreFilterResult 缩小节点集 | AllNodes true = 所有节点都通过 filter；false = 从 NodeNames 取存在的节点，缺失丢弃，其余标 Unresolvable | 🟡 | `AllNodes()` true 只表示 **PreFilter 没有限制候选集**，不代表通过 Filter（Filter 还没跑）。false 的构造正确；被排除节点标 `UnschedulableAndUnresolvable`；通过 Filter 的节点不写 `NodeToStatus` |
+| 4-3 NominatedNodeName | 上一轮抢占写的；`evaluateNominatedNode` 跑 Filter + Extender；过了直接返回，否则全量扫描 | ✅ | 正确 |
+| 4-4 nextStartNodeIndex | `processedNodes = feasible + NodeToStatus.Len()`；出错不更新会影响均衡 | 🟡 | 完整公式：`nextStartNodeIndex = (nextStartNodeIndex + processedNodes) % len(allNodes)`；`%` 保证回绕 |
+
+### 待答追问
+
+1. PreFilter `Rejected` 分支对 `Diagnosis` 做哪三件事？返回什么？
+2. `preRes.AllNodes()` 为 true 到底表示什么？通过 Filter 的节点会被写进 `NodeToStatus` 吗？
+3. 写出 `nextStartNodeIndex` 的完整更新公式，并解释 `% len(allNodes)` 的作用。
+
+### 追问结果（2026-11-22）
+
+| # | 判定 | 要点 |
+|---|---|---|
+| 1 | ✅ | Rejected → `SetAbsentNodesStatus` + `PreFilterMsg` + `AddPluginStatus`，返回 `nil, diagnosis, nil` |
+| 2 | ✅ | `AllNodes()` true = PreFilter 没限制候选集；通过 Filter 的节点不写 `NodeToStatus` |
+| 3 | ✅ | `(nextStartNodeIndex + processedNodes) % len(allNodes)`；取模用于回绕 |
+
+**G18 / G19 / G20 → fixed。第 4 步通过。**
+
+## 细颗粒第 5 步记录（2026-11-22）
+
+对象：`RunPreFilterPlugins`（`framework.go:709-766`）
+
+| 题 | 你的答案 | 判定 | 纠正 |
+|---|---|---|---|
+| 5-1 Skip | 记录到 `SkipPlugins`；同名 Filter 和 PreFilterExtensions 跳过 | ✅ | 消费方是 `RunFilterPlugins`（`:885`）与 PreFilterExtensions（`:794`/`:839`），不是 `schedulingCycle` |
+| 5-2 Unresolvable vs Unschedulable | 前者立刻返回；后者记录 `returnStatus` 继续跑 | ✅ | 前者返回 `nil, s, nil`，本轮不抢占；后者允许后续抢占 |
+| 5-3 Merge | 两个 false 取并集 | 🔴 | 取**交集**；并集会让节点变多 |
+| 5-4 交集为空 | 返回 Unresolvable | ✅ | `result, UnschedulableAndUnresolvable(msg), pluginsWithNodes` |
+
+### 复述结果（2026-11-22）
+
+- 两个 true → `nil`（所有节点）
+- 一个 true → false 那一侧的 `NodeNames`
+- 两个 false → **交集**
+
+**G21 → fixed。第 5 步通过。**
+
 ## 追问复盘（2026-11-10 已答完）
 
 | # | 结果 | 要点 |
@@ -212,7 +260,9 @@
 - [x] **粗颗粒 6 阶段口述（2026-11-12 通过）**
 - [x] 细颗粒第 2 步（`schedulingCycle`，2026-11-15 通过）
 - [x] 细颗粒第 3 步（`schedulePod`，2026-11-18 通过）
-- [~] 细颗粒第 4 步（`findNodesThatFitPod`）
+- [x] 细颗粒第 4 步（`findNodesThatFitPod`，2026-11-22 通过）
+- [x] 细颗粒第 5 步（`RunPreFilterPlugins`，2026-11-22 通过）
+- [~] 细颗粒第 6 步（`findNodesThatPassFilters`）
 - [ ] 终检：不看图口述完整链路
 
 ## 盲区台账
@@ -236,6 +286,10 @@
 | G15 | 不知道 `DeepCopy` 的必要性 | fixed（2026-11-15） |
 | G16 | 不知道 `ErrNoNodesAvailable` 与 `FitError` 会导致「是否抢占」的分叉 | fixed（2026-11-18） |
 | G17 | 误以为 trace 需要 `-v=4`；混淆 trace（耗时）与 `FitError`（原因） | fixed（2026-11-18） |
+| G18 | 把 `PreFilterResult.AllNodes()` 当成「所有节点通过 Filter」 | fixed（2026-11-22） |
+| G19 | PreFilter `Rejected` 分支漏 `SetAbsentNodesStatus` / `AddPluginStatus` / 返回值 | fixed（2026-11-22） |
+| G20 | `nextStartNodeIndex` 公式漏 `% len(allNodes)` | fixed（2026-11-22） |
+| G21 | `PreFilterResult.Merge` 两个非 AllNodes 时取并集 | fixed（2026-11-22） |
 
 ## 会话日志
 
@@ -257,9 +311,15 @@
 - **2026-11-18**：本机拉取远端最新 `03ea59b`，同步第 3 步记录；再次用模块缓存恢复 9 个核心文件为干净 v1.32.0，`pkg/scheduler` 与模块缓存逐文件一致。注释映射保留在 `scripts/annotations/`。
 - **2026-11-18（第 3 步收口）**：追问答完；纠正最终 Status 为 `NewStatus(Unschedulable).WithError(err)`（`:188`），`WithPlugin` 在 `RunPostFilterPlugins`（`framework.go:961`）；确认 trace 默认阈值与 V3/V4 关系。G16/G17 关闭，第 3 步通过。
 - **2026-11-18（复盘）**：生成 `docs/review-2026-11-18.md`，覆盖 `schedulePod` 四短路、`ErrNoNodesAvailable`/`FitError`、trace vs FitError、PreFilter/Filter/PostFilter 分工。
+- **2026-11-22（第 4 步复测）**：4-3 ✅；4-1/4-2/4-4 🟡。新增 G18（AllNodes 语义）、G19（Rejected 分支不完整）、G20（游标公式漏取模）。待答 3 道追问。
+- **2026-11-22（第 4 步收口）**：3 道追问全 ✅；G18/G19/G20 关闭，第 4 步通过。
+- **2026-11-22（第 5 步复测）**：5-1/5-2/5-4 ✅；5-3 Merge 的「两个 false」答成并集，应为交集。新增 G21。待答 1 句复述。
+- **2026-11-22（第 5 步收口）**：Merge 复述正确（两个 false → 交集）；G21 关闭，第 5 步通过。
+- **2026-11-22（A 计划）**：重排 `plan/daily-plan.md`：补课周 11/23–11/29 收口 T1-1 + T2；W3 从 11/30 开始，W8 到 01/10。今天的进度与全部注释汉化同步到 GitHub。
 - **2026-11-18（练习）**：新增 `docs/worksheet-T1-1-flowchart.md`，把 6 阶段、`ScheduleOne` 分叉、`schedulePod` 四短路、PreFilter/Filter/PostFilter 做成填空图。
 - **2026-11-18（流程规范）**：固化「每步开始先给填空版组件流程图」到 skill / `AGENTS.md`；worksheet 增加第 4 步 `findNodesThatFitPod` 的图 5（PreFilter 三种 Status / NominatedNode / Diagnosis）。
 - **2026-11-22**：把汉化扩到调度器全部非测试源码：`pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**`，共 124 个文件、34,144 行、3,032 个注释块（3,033 条译文）。映射写入 `scripts/annotations/` 并登记到 manifest；`apply_annotations.py` 增加只读文件处理与「已汉化也校验」。验收：124 个文件 `--check` 全过、`gofmt` 无输出、`go build ./pkg/scheduler/... ./cmd/kube-scheduler/...` 通过、行数与 v1.32.0 上游逐文件一致。
+- **2026-11-22（全量）**：按要求扩到该目录下所有 Go 文件与所有注释：177 个文件（含 52 个 `_test.go`）、83,979 行、4,012 个注释块 + 152 条行尾注释 + 6 处 `/* ... */` 块注释。`annotate_comments.py` 增加 `--scope all`；新增 `apply_block_comments.py` 与 `block_comments.json`；`--check` 改为去注释后比较代码。验收：177 个文件 `--check --scope all` 全过、块注释 0 缺失、`gofmt` 无输出、`go build` 通过、`go test -run '^$'` 全部测试包可编译、行数与 v1.32.0 上游一致。
 
 ## 更新规则
 

@@ -109,5 +109,6 @@
   "1652": "MultiPoint 不在 getExtensionPoints 的返回值中，需单独解析。",
   "1658": "ProfileName 返回该框架所属 profile 的名称。",
   "1663": "PercentageOfNodesToScore 返回该 profile 的节点打分百分比。",
-  "1668": "Parallelizer 返回持有调度器并行度的并行执行器。"
+  "1668": "Parallelizer 返回持有调度器并行度的并行执行器。",
+  "1558": "返回 nil，而不是 *waitingPod(nil)。"
 }

@@ -1,0 +1,4 @@
+{
+  "22": "DoNotScheduleTaintsFilterFunc 返回过滤函数，筛出会阻止 Pod 调度到节点的污点。",
+  "25": "PodToleratesNodeTaints 只关心 NoSchedule 和 NoExecute 两种污点。"
+}

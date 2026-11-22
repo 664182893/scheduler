@@ -46,7 +46,7 @@
 | `scripts/setup-source.*` | 拉取 kube-scheduler v1.32.0 源码 |
 | `scripts/apply-annotations.*` | 重新拉源码后一键恢复中文注释 |
 | `scripts/annotate_comments.py` | 单文件注释映射的列出 / 应用 / 校验 |
-| `scripts/annotations/` | 124 个调度器非测试文件的译文映射 + manifest（不含源码） |
+| `scripts/annotations/` | 177 个调度器文件（含测试）的译文映射 + manifest（不含源码） |
 | `.agents/skills/dialogue-acceptance/SKILL.md` | 对话式验收方法（项目内副本） |
 
 ## 学习路线（W1–W8）

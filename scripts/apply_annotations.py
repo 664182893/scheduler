@@ -3,7 +3,8 @@
 
 This is the "restore annotations after a fresh checkout" entry point. It reads
 scripts/annotations/manifest.json, applies each map through annotate_comments.py,
-verifies line counts / code prefix / coverage, and checks gofmt.
+verifies line counts / code (comments stripped) / coverage, applies the
+/* ... */ block-comment patches, and checks gofmt.
 
 Usage:
   python scripts/apply_annotations.py --source-root /path/to/kubernetes
@@ -72,15 +73,23 @@ def main():
             continue
 
         text = io.open(target, encoding='utf-8').read()
+        ref = os.path.join(REPO, '.local-backup', 'clean', rel)
+        if not os.path.isfile(ref):
+            ref = target
+
         if CJK.search(text):
-            print('SKIP  %s（已有中文注释）' % rel)
+            # 已有中文：仍然校验一遍，避免半套注释被静默跳过。
+            code, out = run([sys.executable, os.path.join(HERE, 'annotate_comments.py'),
+                             '--check', '--scope', 'all', target, '--ref', ref])
+            if code != 0:
+                print('FAIL  %s\n%s' % (rel, out))
+                failed.append(rel)
+                continue
+            print('SKIP  %s（已有中文注释，校验通过）' % rel)
             skipped += 1
             continue
 
         # 优先用仓库里的干净原件做参考；新机器没有备份时，干净源码本身就是参考。
-        ref = os.path.join(REPO, '.local-backup', 'clean', rel)
-        if not os.path.isfile(ref):
-            ref = target
 
         code, out = run([sys.executable, os.path.join(HERE, 'annotate_comments.py'),
                          '--apply', target, '--ref', ref, '--map', mapping, '--in-place'])
@@ -90,7 +99,7 @@ def main():
             continue
 
         code, out = run([sys.executable, os.path.join(HERE, 'annotate_comments.py'),
-                         '--check', target, '--ref', ref])
+                         '--check', '--scope', 'all', target, '--ref', ref])
         if code != 0:
             print('FAIL  %s\n%s' % (rel, out))
             failed.append(rel)
@@ -104,6 +113,14 @@ def main():
 
         print('OK    %s  %s' % (rel, out))
         applied += 1
+
+    code, out = run([sys.executable, os.path.join(HERE, 'apply_block_comments.py'),
+                     '--source-root', source_root])
+    if code != 0:
+        print('FAIL  block comments\n%s' % out)
+        failed.append('block_comments')
+    else:
+        print(out)
 
     print('\napplied %d, skipped %d, failed %d' % (applied, skipped, len(failed)))
     if failed:

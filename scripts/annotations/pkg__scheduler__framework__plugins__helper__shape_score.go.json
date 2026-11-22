@@ -1,0 +1,7 @@
+{
+  "19": "FunctionShape 是一组 FunctionShapePoint 的集合。",
+  "22": "FunctionShapePoint 表示折线上的一个形状点。",
+  "24": "Utilization 是函数自变量。",
+  "26": "Score 是函数取值。",
+  "39": "用线性分段构造分段函数，各段由 shape 数组定义，段间线性插值，两端取端点值。"
+}

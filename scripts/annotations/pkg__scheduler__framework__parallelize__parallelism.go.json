@@ -1,0 +1,7 @@
+{
+  "27": "DefaultParallelism 是调度器使用的默认并行度。",
+  "30": "Parallelizer 保存调度器使用的并行度。",
+  "35": "NewParallelizer 返回一个持有并行度的对象。",
+  "42": "chunkSizeFor 返回给定元素数量用于并行工作的分块大小，以兼顾 CPU 利用率，取 max(1, min(sqrt(n), n/Parallelism))。",
+  "55": "Until 是对 workqueue.ParallelizeUntil 的封装，供调度算法使用；operation 会作为标签记录到 goroutine 指标中。"
+}

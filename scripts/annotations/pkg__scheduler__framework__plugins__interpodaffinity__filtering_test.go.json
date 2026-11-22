@@ -1,0 +1,10 @@
+{
+  "1232": "getState 根据给定 Pod 列表构造前置过滤所需的状态。",
+  "1254": "allPodsState 是包含 addedPod 在内的全部 Pod 交给 PreFilter 时得到的状态。",
+  "1257": "state 只针对 existingPods（不含 addedPod）生成。",
+  "1259": "克隆状态，便于稍后执行 Remove 后作对比。",
+  "1262": "把 addedPod 加入状态，并验证其与 allPodsState 相等。",
+  "1285": "移除刚加入的 Pod，确认状态与原始状态一致。",
+  "1322": "测试 getTPMapMatchingIncomingAffinityAntiAffinity 方法在反亲和场景下的行为。",
+  "1388": "值为 2，每个亲和性条目各计一次。"
+}

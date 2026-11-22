@@ -1,0 +1,9 @@
+{
+  "33": "Name 是插件在插件注册表和配置中使用的名称。",
+  "36": "SchedulingGates 检查 Pod 是否带有 .spec.schedulingGates。",
+  "60": "EventsToRegister 返回可能使被本插件拒绝的 Pod 重新可调度的事件。",
+  "68": "启用 QueueingHint 后，调度队列用 Pod/Update 提示判断该更新能否让 Pod 可调度。",
+  "70": "移除调度门后 Pod 才可能变得可调度。",
+  "75": "New 初始化并返回一个新插件实例。",
+  "89": "若更新事件不是针对目标 Pod，则不会使其可调度。"
+}

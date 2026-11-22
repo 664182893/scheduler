@@ -1,0 +1,17 @@
+{
+  "34": "nominator 保存被提名到各节点运行的 Pod；因 nominatedNodeName 可能与调度器记录不一致，需按 UID 查找并更新。",
+  "41": "nLock 同步 nominator 的所有操作；加锁顺序必须为 SchedulingQueue.lock > activeQueue.lock > nLock，否则可能死锁。",
+  "44": "podLister 用于确认给定 Pod 是否存在。",
+  "48": "nominatedPods 以节点名为键，值为被提名到该节点运行的 Pod 列表。",
+  "51": "nominatedPodToNode 以 Pod UID 为键，记录其被提名到的节点名。",
+  "66": "AddNominatedPod 将 Pod 加入指定节点的提名列表；在选定节点后、更新 Pod 对象前调用，以避免与后续调度周期竞争。",
+  "75": "若 Pod 已存在则先删除，确保同一个 Pod 只保存一份实例。",
+  "89": "若 Pod 已被移除或已调度，则不对其进行提名。",
+  "111": "UpdateNominatedPod 用 newPod 更新 oldPod。",
+  "117": "有时内存刚为该 Pod 预留 NominatedNode 后，会收到不含该字段的 Update 事件；此时更新 Pod 指针需继续保留该提名节点。",
+  "122": "若 Update 事件表示新增、更新或移除 NominatedNode 信息，则不会进入下面的 if 分支。",
+  "125": "这是唯一需要继续预留 NominatedNode 的情况。",
+  "133": "无论 nominatedNodeName 是否变化都执行更新，以确保 Pod 指针被更新。",
+  "138": "DeleteNominatedPodIfExists 从 nominatedPods 中删除该 Pod。",
+  "168": "nominatedNodeName 返回 Pod 的提名节点名。"
+}

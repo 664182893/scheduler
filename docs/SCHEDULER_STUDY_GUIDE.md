@@ -8,7 +8,7 @@
 | 覆盖范围 | T1-1 主干（单 Pod 全流程）+ T0-1 / T0-2 的日志证据 |
 | 源码版本 | kube-scheduler **v1.32.0** |
 | 源码根 | 另一台机器：`D:\code\GoCode\src\scheduler\k8s-v1.32.0`；本机：仓库根（`.agents/source-root.local`），即 `pkg/scheduler/` |
-| 注释 | 本机 `pkg/scheduler/` 下 9 个核心文件已汉化（块级追加中文，行号不变） |
+| 注释 | 本机调度器全部 Go 源码（177 个文件，含测试）已汉化（行号不变） |
 | 行号状态 | 2026-11-15 用模块缓存 `k8s.io/kubernetes@v1.32.0` 全量复核 |
 | 合并来源 | `docs/T1-1-pod-lifecycle-6stages.md`、`docs/SCHEDULER_CALLCHAIN.md`、`docs/SCHEDULER_FAILURE_MATRIX.html`、`docs/SOURCE_SNAPSHOT.md`、`acceptance/` 两份记录、`progress.md` |
 | 不覆盖 | Volcano / 大模型两条线；抢占内部算法；队列 backoff 与 QueueingHint 内部；DRA、volume 插件内部 |

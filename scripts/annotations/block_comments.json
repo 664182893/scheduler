@@ -1,0 +1,41 @@
+{
+  "version": "v1.32.0",
+  "patches": [
+    {
+      "file": "pkg/scheduler/apis/config/types.go",
+      "line": 211,
+      "old": " * NOTE: The following variables and methods are intentionally left out of the staging mirror.",
+      "new": " * NOTE: The following variables and methods are intentionally left out of the staging mirror. 注意：以下变量和方法被有意排除在 staging 镜像之外。"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/dynamicresources/dynamicresources_test.go",
+      "line": 908,
+      "old": "/* filteredNodeStatusMap not used by plugin */",
+      "new": "/* filteredNodeStatusMap not used by plugin：该插件未使用 filteredNodeStatusMap */"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodevolumelimits/csi.go",
+      "line": 191,
+      "old": "/* new pod */",
+      "new": "/* new pod：新 Pod */"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodevolumelimits/csi.go",
+      "line": 213,
+      "old": "/* existing pod */",
+      "new": "/* existing pod：已有 Pod */"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/binder_test.go",
+      "line": 80,
+      "old": "/* not owned*/",
+      "new": "/* not owned：非自有 */"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/binder_test.go",
+      "line": 81,
+      "old": "/* owned */",
+      "new": "/* owned：自有 */"
+    }
+  ]
+}

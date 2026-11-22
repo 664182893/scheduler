@@ -1,0 +1,14 @@
+{
+  "26": "Extender 是外部进程影响 Kubernetes 调度决策的接口，常用于 Kubernetes 未直接管理的资源。",
+  "28": "Name 返回标识该 extender 的唯一名称。",
+  "35": "Filter 依据 extender 实现的谓词函数过滤节点，返回列表应是传入列表的子集，并可带回失败节点及原因。",
+  "40": "Prioritize 依据 extender 实现的优先级函数打分，加权分将与调度器分数相加并用于选择主机。",
+  "43": "Bind 将 Pod 绑定到节点的操作委托给 extender。",
+  "46": "IsBinder 返回该 extender 是否配置了 Bind 方法。",
+  "50": "IsInterested 在此 Pod 请求的至少一个扩展资源由该 extender 管理时返回 true。",
+  "53": "IsPrioritizer 返回该 extender 是否配置了 Prioritize 方法。",
+  "56": "IsFilter 返回该 extender 是否配置了 Filter 方法。",
+  "65": "ProcessPreemption 根据待调度 Pod 及已有的候选节点和牺牲 Pod，返回经 extender 抢占处理后可能变化的节点与牺牲 Pod 集合。",
+  "72": "SupportsPreemption 返回调度器 extender 是否支持抢占。",
+  "77": "IsIgnorable 返回 true 表示该 extender 不可用时调度不应失败，支持 Filter 与 Bind 两种操作。"
+}

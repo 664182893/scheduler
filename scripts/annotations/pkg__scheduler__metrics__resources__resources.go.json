@@ -1,0 +1,10 @@
+{
+  "19": "resources 包提供指标采集器，按调度器与 kubelet 的解释方式上报集群内 Pod 的资源消耗（requests 与 limits）",
+  "75": "依据给定 podLister 创建采集器，返回按 Prometheus 格式上报指定指标的 handler，不含其他指标",
+  "83": "检查 resourceMetricsCollector 是否实现了必要的接口",
+  "92": "注册基数随 Pod 数增长的指标，按 Pod、节点、资源与生命周期阶段拆分，每个资源返回合计与阶段用量两条序列",
+  "117": "已终止的 Pod 不参与资源用量计算",
+  "185": "汇总 Pod 所有容器的已定义资源并计入 Pod 开销；调用方可传入复用列表避免分配，与 resourcehelper.PodRequestsAndLimits 结果一致但更高效",
+  "189": "未调度的 Pod 不可能是终止状态",
+  "193": "待办：解决 #96515 后在此补充对终止状态的判断"
+}

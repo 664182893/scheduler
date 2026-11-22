@@ -1,0 +1,15 @@
+{
+  "41": "返回能唯一标识 Pod 的名称",
+  "44": "用下划线作分隔符，因为 Pod 名（DNS 子域名格式）不允许下划线",
+  "49": "返回 Pod 的启动时间，尚未启动则返回当前时间",
+  "54": "已假定调度或已绑定但尚未启动的 Pod 还没有 StartTime",
+  "59": "返回所有牺牲者中最高优先级 Pod 里最早的启动时间",
+  "62": "不应执行到这里",
+  "87": "第一个 Pod 优先级更高时返回 true，相同则比较启动时间；参数用 interface{} 以配合 SortableList，实际应为 *v1.Pod",
+  "97": "定义调度周期中可重试的错误",
+  "104": "计算 old.Status 到 newStatus 的增量，并提交 patch 请求更新 Pod",
+  "136": "从 API server 删除给定 Pod",
+  "142": "向 API server 提交 patch，把各 Pod 的 Status.NominatedNodeName 置空",
+  "158": "校验资源是否属于扩展、巨页、原生或可挂载卷资源",
+  "168": "对 oldObj 会解开 DeletedFinalStateUnknown 并转换其内部对象"
+}

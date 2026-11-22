@@ -1,0 +1,6 @@
+{
+  "25": "classResourceMap 是存储类到 StorageResource 的映射",
+  "28": "volumeCapacityScorer 依据存储类资源信息计算得分",
+  "31": "按评分函数形状构建 volumeCapacityScorer",
+  "43": "alpha 阶段所有存储类权重相同"
+}

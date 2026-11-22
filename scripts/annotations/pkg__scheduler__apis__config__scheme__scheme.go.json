@@ -1,0 +1,5 @@
+{
+  "28": "Scheme 是所有 kubescheduler API 类型注册到的 runtime.Scheme。",
+  "31": "Codecs 提供该 scheme 的编解码能力，并启用严格解码。",
+  "39": "AddToScheme 注册 kubescheduler API 的所有已知版本并设置版本优先级。"
+}

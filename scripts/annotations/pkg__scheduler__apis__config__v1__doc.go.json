@@ -1,0 +1,3 @@
+{
+  "22": "声明本包启用 deepcopy-gen、conversion-gen、defaulter-gen 与组名，转换目标为 kube-scheduler/config/v1。"
+}

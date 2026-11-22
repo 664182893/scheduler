@@ -1,0 +1,20 @@
+{
+  "28": "Snapshot 是缓存 NodeInfo 与 NodeTree 顺序的快照，调度器在每个调度周期开始时取快照并用于本轮操作。",
+  "30": "nodeInfoMap 是从节点名到其 NodeInfo 快照的映射。",
+  "32": "nodeInfoList 按缓存 nodeTree 中的顺序排列节点。",
+  "34": "havePodsWithAffinityNodeInfoList 是至少含一个声明亲和性 Pod 的节点列表。",
+  "37": "havePodsWithRequiredAntiAffinityNodeInfoList 是至少含一个声明强制反亲和性 Pod 的节点列表。",
+  "40": "usedPVCSet 保存被已调度 Pod 使用的 PVC 名集合，键格式为 namespace/name。",
+  "47": "NewEmptySnapshot 初始化并返回一个 Snapshot。",
+  "55": "NewSnapshot 初始化并返回一个 Snapshot。",
+  "83": "createNodeInfoMap 将 Pod 列表按节点名汇总为以节点名为键的聚合信息映射。",
+  "125": "getNodeImageStates 根据 imageExistence 映射返回指定节点的镜像状态。",
+  "140": "createImageExistenceMap 返回以镜像名为键、记录该镜像存在于哪些节点的映射。",
+  "157": "NodeInfos 返回一个 NodeInfoLister。",
+  "162": "StorageInfos 返回一个 StorageInfoLister。",
+  "167": "NumNodes 返回快照中的节点数量。",
+  "172": "List 返回快照中的节点列表。",
+  "177": "HavePodsWithAffinityList 返回至少含一个 Pod 亲和性 Pod 的节点列表。",
+  "183": "HavePodsWithRequiredAntiAffinityList 返回至少含一个强制 Pod 反亲和性 Pod 的节点列表。",
+  "188": "Get 返回指定节点名的 NodeInfo。"
+}

@@ -1,0 +1,6 @@
+{
+  "28": "PVAssumeCache 是 PersistentVolume 对象的 AssumeCache",
+  "41": "创建 PV 假设缓存",
+  "93": "PVCAssumeCache 是 PersistentVolumeClaim 对象的 AssumeCache",
+  "99": "创建 PVC 假设缓存"
+}

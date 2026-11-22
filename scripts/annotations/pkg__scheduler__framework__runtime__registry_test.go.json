@@ -1,0 +1,6 @@
+{
+  "78": "isRegistryEqual 比较两个注册表是否相等；因 reflect.DeepEqual() 和 cmp() 无法比较函数值，故改用本函数。",
+  "85": "pluginFactory 函数不相同。",
+  "89": "registryY 含有 registryX 中不存在的条目",
+  "96": "registryX 含有 registryY 中不存在的条目"
+}

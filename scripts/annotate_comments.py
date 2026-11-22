@@ -8,16 +8,16 @@ The translation is appended to the end of an existing comment line:
 Every mode compares against a clean reference file and refuses to change code.
 
 Usage:
-  # 1. List the last line of every comment block (fill in the values)
-  python scripts/annotate_comments.py --list pkg/scheduler/scheduler.go > map.json
+  # 1. List the last line of every comment block and every trailing comment
+  python scripts/annotate_comments.py --list --scope all pkg/scheduler/scheduler.go > map.json
 
   # 2. Apply translations in place
   python scripts/annotate_comments.py --apply pkg/scheduler/scheduler.go \
       --ref .local-backup/clean/pkg/scheduler/scheduler.go \
       --map scripts/annotations/pkg__scheduler__scheduler.go.json --in-place
 
-  # 3. Verify line count, code prefix and translation coverage
-  python scripts/annotate_comments.py --check pkg/scheduler/scheduler.go \
+  # 3. Verify line count, code (comments stripped) and translation coverage
+  python scripts/annotate_comments.py --check --scope all pkg/scheduler/scheduler.go \
       --ref .local-backup/clean/pkg/scheduler/scheduler.go
 
   # 4. Extract an existing annotated file back into a map
@@ -29,7 +29,9 @@ Usage:
 import argparse
 import io
 import json
+import os
 import re
+import stat
 import sys
 
 CJK = re.compile(r'[\u4e00-\u9fff]')
@@ -47,8 +49,19 @@ def read_lines(path):
 
 
 def write_lines(path, lines):
-    with io.open(path, 'w', encoding='utf-8', newline='\n') as f:
-        f.write('\n'.join(lines))
+    data = '\n'.join(lines)
+    try:
+        with io.open(path, 'w', encoding='utf-8', newline='\n') as f:
+            f.write(data)
+    except PermissionError:
+        # Some source snapshots are read-only. Make it writable, then restore.
+        mode = os.stat(path).st_mode
+        os.chmod(path, mode | stat.S_IWRITE)
+        try:
+            with io.open(path, 'w', encoding='utf-8', newline='\n') as f:
+                f.write(data)
+        finally:
+            os.chmod(path, mode)
 
 
 def is_comment(line):
@@ -76,9 +89,70 @@ def comment_blocks(lines):
             i += 1
 
 
+def _scan_line(line, in_block):
+    """Return (// position or -1, still_in_block). Tracks strings and /* */."""
+    i = 0
+    quote = None
+    while i < len(line):
+        if in_block:
+            if line.startswith('*/', i):
+                in_block = False
+                i += 2
+                continue
+            i += 1
+            continue
+        ch = line[i]
+        if quote:
+            if ch == '\\' and quote == '"':
+                i += 2
+                continue
+            if ch == quote:
+                quote = None
+        else:
+            if line.startswith('/*', i):
+                in_block = True
+                i += 2
+                continue
+            if line.startswith('//', i):
+                return i, in_block
+            if ch in ('"', '`'):
+                quote = ch
+        i += 1
+    return -1, in_block
+
+
+def trailing_comment_lines(lines):
+    """Yield 1-based line numbers of comments that follow code on the same line."""
+    in_block = False
+    in_raw = False
+    for idx, line in enumerate(lines, 1):
+        if in_raw:
+            if '`' in line:
+                in_raw = False
+            continue
+        if line.count('`') % 2 == 1:
+            in_raw = True
+            continue
+        pos, in_block = _scan_line(line, in_block)
+        if pos <= 0 or not line[:pos].strip():
+            continue
+        stripped = line.strip()
+        if stripped.startswith(('http://', 'https://')):
+            continue
+        text = line[pos + 2:].strip()
+        if not text or text.startswith(('nolint', 'go:', '+build')):
+            continue
+        if line.lstrip().startswith('package ') and text.startswith('import "'):
+            continue
+        yield idx
+
+
 def cmd_list(args):
     lines = read_lines(args.file)
-    mapping = {str(end): '' for _, end in comment_blocks(lines)}
+    keys = [end for _, end in comment_blocks(lines)]
+    if args.scope == 'all':
+        keys.extend(trailing_comment_lines(lines))
+    mapping = {str(k): '' for k in sorted(set(keys))}
     print(json.dumps(mapping, ensure_ascii=False, indent=2, sort_keys=False))
     return 0
 
@@ -121,6 +195,42 @@ def cmd_apply(args):
     return 0
 
 
+def strip_code(line, in_block):
+    """Return (code with comments removed, still_in_block)."""
+    out = []
+    i = 0
+    quote = None
+    while i < len(line):
+        if in_block:
+            if line.startswith('*/', i):
+                in_block = False
+                i += 2
+                continue
+            i += 1
+            continue
+        ch = line[i]
+        if quote:
+            out.append(ch)
+            if ch == '\\' and quote == '"' and i + 1 < len(line):
+                out.append(line[i + 1])
+                i += 2
+                continue
+            if ch == quote:
+                quote = None
+        else:
+            if line.startswith('//', i):
+                break
+            if line.startswith('/*', i):
+                in_block = True
+                i += 2
+                continue
+            if ch in ('"', '`'):
+                quote = ch
+            out.append(ch)
+        i += 1
+    return ''.join(out).rstrip(), in_block
+
+
 def cmd_check(args):
     lines = read_lines(args.file)
     ref = read_lines(args.ref)
@@ -129,8 +239,11 @@ def cmd_check(args):
     if len(lines) != len(ref):
         problems.append('line count %d != ref %d' % (len(lines), len(ref)))
     else:
+        in_block_a = in_block_b = False
         for i, (a, b) in enumerate(zip(lines, ref), 1):
-            if not a.startswith(b):
+            code_a, in_block_a = strip_code(a, in_block_a)
+            code_b, in_block_b = strip_code(b, in_block_b)
+            if code_a != code_b:
                 problems.append('code changed at line %d: %r' % (i, a))
                 if len(problems) > 10:
                     break
@@ -139,6 +252,10 @@ def cmd_check(args):
         (s, e) for s, e in comment_blocks(ref)
         if not any(CJK.search(lines[i - 1]) for i in range(s, e + 1))
     ]
+    if args.scope == 'all':
+        for lineno in trailing_comment_lines(ref):
+            if not CJK.search(lines[lineno - 1]):
+                missing.append((lineno, lineno))
     if missing:
         problems.append('untranslated comment blocks: %s' % ', '.join(
             '%d-%d' % m for m in missing))
@@ -179,6 +296,8 @@ def main():
     p.add_argument('--map')
     p.add_argument('--out')
     p.add_argument('--in-place', action='store_true')
+    p.add_argument('--scope', choices=('blocks', 'all'), default='blocks',
+                   help='blocks = 独立 // 注释块；all = 再加上行尾 // 注释')
     g = p.add_mutually_exclusive_group(required=True)
     g.add_argument('--list', action='store_true')
     g.add_argument('--apply', action='store_true')

@@ -1,0 +1,6 @@
+{
+  "30": "NewTestQueue 使用空的 informer 工厂创建优先队列。",
+  "36": "NewTestQueueWithObjects 使用填充了所提供对象的 informer 工厂创建优先队列。",
+  "46": "由于 Pop 等主要函数要求设置 metric recorder，这里总是设置一个。",
+  "48": "在用户提供的选项之前设置，以便用户可覆盖它。"
+}

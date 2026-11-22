@@ -1,0 +1,7 @@
+{
+  "24": "GroupName 是本包使用的 API 组名。",
+  "27": "SchemeGroupVersion 是注册这些对象的组版本，此处为内部版本。",
+  "31": "SchemeBuilder 持有本 API 包需要执行的 scheme 初始化函数。",
+  "33": "AddToScheme 是把本 API 组和版本注册到给定 scheme 的全局函数。",
+  "37": "addKnownTypes 把已知类型注册到给定 scheme。"
+}

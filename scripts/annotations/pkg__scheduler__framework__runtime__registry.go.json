@@ -1,0 +1,11 @@
+{
+  "30": "PluginFactory 是构建插件的函数。",
+  "33": "PluginFactoryWithFts 是带特性开关构建插件的函数。",
+  "37": "FactoryAdapter 用于在调用方仍期望旧 PluginFactory 时向插件注入特性开关。",
+  "44": "DecodeInto 把 *runtime.Unknown 类型的配置解码到 into 中。",
+  "58": "ContentType 为空时表示默认的 ContentTypeJSON。",
+  "70": "Registry 是所有可用插件的集合，框架用它启用并初始化已配置的插件。",
+  "74": "Register 向注册表添加插件，同名插件已存在时返回错误。",
+  "84": "Unregister 从注册表删除插件，名字不存在时返回错误。",
+  "93": "Merge 把传入的注册表合并进当前注册表。"
+}

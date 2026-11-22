@@ -1,0 +1,3 @@
+{
+  "25": "compareSignal 是触发缓存比较的信号，在非 Windows 环境下为 SIGUSR2。"
+}

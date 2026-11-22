@@ -1,0 +1,11 @@
+{
+  "29": "getDefaultPlugins 返回默认的插件集合。",
+  "66": "DynamicResources 应排在 DefaultPreemption 之前：先释放空闲 ResourceClaim，比驱逐可能仍在工作的 Pod 更好。",
+  "80": "mergePlugins 把自定义插件集合合并进默认集合，并处理禁用项。",
+  "110": "replacedPluginIndex 记录已替换默认插件的自定义插件下标集合。",
+  "116": "用户手动禁用某个（或用星号禁用全部）默认插件时需记录，好让框架的 MultiPoint 逻辑跳过插入。",
+  "122": "MultiPoint 下默认集合中可能有被禁用的插件，例如通过 MultiPoint 启用 Filter 与 Score 却默认禁用其 Score。",
+  "137": "默认插件被显式重新配置时，按其配置更新默认插件。",
+  "140": "就地更新默认插件以保持原有顺序。",
+  "150": "追加所有未替换默认插件的自定义插件；重复项会在框架实例化时被检测并中止。"
+}

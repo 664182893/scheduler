@@ -1,0 +1,20 @@
+{
+  "27": "ErrNotFound 是表示未找到的错误信息。",
+  "31": "StateData 是存放在 CycleState 中的任意数据的通用类型。",
+  "35": "Clone 用于复制 StateData；出于性能考虑，对不受 PreFilter 可选 AddPod/RemovePod 影响的成员应做浅拷贝。",
+  "39": "StateKey 是存储在 CycleState 中的键的类型。",
+  "47": "CycleState 让插件存取任意数据，不做数据保护（插件均视为可信），底层用 sync.Map 优化一次写入多次读取的场景。",
+  "49": "storage 以 StateKey 为键、StateData 为值。",
+  "51": "recordPluginMetrics 为 true 时，本周期会记录 metrics.PluginExecutionDuration。",
+  "53": "SkipFilterPlugins 是在 Filter 扩展点中被跳过的插件。",
+  "55": "SkipScorePlugins 是在 Score 扩展点中被跳过的插件。",
+  "59": "NewCycleState 初始化并返回一个新的 CycleState 指针。",
+  "64": "ShouldRecordPluginMetrics 返回是否应记录 metrics.PluginExecutionDuration 指标。",
+  "72": "SetRecordPluginMetrics 将 recordPluginMetrics 设为给定值。",
+  "81": "Clone 复制并返回 CycleState 指针；若被克隆的接收者为 nil 则返回 nil。",
+  "87": "对 storage 做安全复制，以防后续被覆盖。",
+  "92": "以下字段不会被修改，因此无需安全复制。",
+  "103": "Read 从 CycleState 读取指定 key 的数据，键不存在时返回 ErrNotFound。",
+  "113": "Write 以指定 key 将 val 存入 CycleState。",
+  "120": "Delete 从 CycleState 删除指定 key 的数据。"
+}

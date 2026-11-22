@@ -1,0 +1,17 @@
+{
+  "33": "NewFramework 根据注册函数和选项创建 Framework。",
+  "47": "RegisterPluginFunc 是注册 Filter 插件到注册表时使用的函数签名。",
+  "50": "RegisterQueueSortPlugin 返回把 QueueSort 插件注册到注册表的函数。",
+  "55": "RegisterPreFilterPlugin 返回把 PreFilter 插件注册到注册表的函数。",
+  "60": "RegisterFilterPlugin 返回把 Filter 插件注册到注册表的函数。",
+  "65": "RegisterReservePlugin 返回把 Reserve 插件注册到注册表的函数。",
+  "70": "RegisterPermitPlugin 返回把 Permit 插件注册到注册表的函数。",
+  "75": "RegisterPreBindPlugin 返回把 PreBind 插件注册到注册表的函数。",
+  "80": "RegisterScorePlugin 返回把 Score 插件注册到注册表的函数。",
+  "85": "RegisterPreScorePlugin 返回把 PreScore 插件注册到注册表的函数。",
+  "90": "RegisterBindPlugin 返回把 Bind 插件注册到注册表的函数。",
+  "95": "RegisterPluginAsExtensions 返回把插件按给定扩展点注册到注册表的函数。",
+  "100": "RegisterPluginAsExtensionsWithWeight 返回带权重按扩展点注册插件的函数。",
+  "111": "使用最新配置 API 版本的默认值。",
+  "150": "BuildNodeInfos 从 v1.Node 切片构建 NodeInfo 切片。"
+}

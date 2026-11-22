@@ -1,0 +1,15 @@
+{
+  "194": "本测试只关心是否收到预期的 patch 请求，不关心被 patch 后的 Pod 结果；调度器不使用响应，故返回 &v1.Pod{} 即可。",
+  "226": "validateErr 判断 PatchPodStatus 返回的错误是否为预期错误（true 表示正是预期错误）。",
+  "254": "参考 #101697、#94626：ImagePullSecrets 允许空名称，而 Pod patch 的 mergeKey 是 name 字段，会导致双向合并 patch 生成失败。",
+  "263": "这会序列化为 imagePullSecrets:[{}]。",
+  "285": "对第一次 patch 请求返回连接被拒绝错误。",
+  "289": "第二次 patch 请求不返回错误。",
+  "293": "请求超过三次时返回错误。",
+  "326": "请求超过四次时返回错误。",
+  "330": "对第一次 patch 请求返回连接被拒绝错误。",
+  "370": "此处不应出现错误。",
+  "392": "Test_As 测试 As 函数处理 Pod 的情况。",
+  "447": "Test_As_Node 测试 As 函数处理 Node 的情况。",
+  "496": "Test_As_KMetadata 测试 As 函数处理 KMetadata 的情况。"
+}

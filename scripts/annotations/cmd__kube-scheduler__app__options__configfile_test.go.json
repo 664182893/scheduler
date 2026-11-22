@@ -1,0 +1,5 @@
+{
+  "39": "schedulerConfigMinimalCorrect 是最小的正确调度器配置。",
+  "45": "schedulerConfigDecodeErr 是加载时会抛出解码错误的调度器配置。",
+  "51": "schedulerConfigVersionTooOld 是因配置版本 v1alpha1 过旧而会报错的调度器配置。"
+}

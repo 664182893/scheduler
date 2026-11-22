@@ -153,5 +153,6 @@
   "1351": "delete 从不可调度 podInfoMap 删除 Pod，gated 参数决定递减哪个指标",
   "1365": "get 在 map 中找到同键 Pod 的 QueuedPodInfo 则返回，否则返回 nil",
   "1374": "clear 清空不可调度 podInfoMap 的所有条目",
-  "1385": "newUnschedulablePods 初始化 UnschedulablePods 对象"
+  "1385": "newUnschedulablePods 初始化 UnschedulablePods 对象",
+  "586": "pInfo 不存在时无需处理。"
 }

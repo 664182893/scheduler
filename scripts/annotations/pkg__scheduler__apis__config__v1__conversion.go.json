@@ -1,0 +1,6 @@
+{
+  "33": "该 scheme 同时注册内部与 v1 类型，用于 PluginConfig.Args 的默认化与转换。",
+  "40": "惰性初始化插件参数转换所用的 scheme，只执行一次。",
+  "56": "convertToInternalPluginConfigArgs 先应用默认值，再用 scheme 把 PluginConfig 的 Args 转为内部类型。",
+  "87": "convertToExternalPluginConfigArgs 用 scheme 把 PluginConfig 的 Args 转为外部版本化类型。"
+}

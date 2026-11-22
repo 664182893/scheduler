@@ -1,0 +1,16 @@
+{
+  "37": "Name 是插件在插件注册表和配置中使用的名称。",
+  "46": "InterPodAffinity 是检查 Pod 间亲和性的插件。",
+  "55": "Name 返回插件名称，用于日志等场景。",
+  "61": "EventsToRegister 返回可能使调度失败的 Pod 重新可调度的事件。",
+  "66": "说明：理想只需注册 Add 与 UpdateNodeLabel，但为避免漏掉 Node/Add 事件而附带 UpdateNodeTaint，见 #109437。",
+  "69": "启用 QueueingHint 后不再使用 preCheck，也无需注册 UpdateNodeTaint 事件。",
+  "79": "所有 ActionType 都包含这些事件：Delete、UpdatePodLabel、Add 均可能让失败的 Pod 变为可调度。",
+  "85": "New 初始化并返回一个新插件实例。",
+  "122": "把 NamespaceSelector 命中的命名空间并入 Namespaces 并置空选择器，匹配时无需再查命名空间标签。",
+  "139": "GetNamespaceLabelsSnapshot 返回该命名空间关联标签的快照。",
+  "143": "创建并返回标签快照。",
+  "173": "Pod 被更新：当更新后满足目标 Pod 亲和或不满足其反亲和时返回 Queue，因亲和只需单个 Pod 满足全部项。",
+  "190": "Pod 被添加：当新增 Pod 满足目标 Pod 的亲和项时返回 Queue。",
+  "202": "Pod 被删除：当被删除的 Pod 满足目标 Pod 的反亲和时返回 Queue。"
+}

@@ -1,0 +1,19 @@
+{
+  "33": "过滤 spec.unschedulable=true 的节点，除非 Pod 容忍 node.kubernetes.io/unschedulable:NoSchedule 污点。",
+  "41": "插件名称，用于插件注册表与配置。",
+  "45": "节点状态未知时的失败原因。",
+  "47": "节点不可调度时的失败原因。",
+  "52": "返回可能使被本插件拒绝的 Pod 变为可调度的事件。",
+  "59": "理想情况下只需注册 Add 与 UpdateNodeTaint，但受 preCheck 影响可能漏掉 Node/Add，故统一注册 UpdateNodeLabel。",
+  "65": "启用 QueueingHint 后不再使用 preCheck，也无需注册 UpdateNodeLabel 事件。",
+  "70": "启用 QueueingHint 时，调度队列借助 Pod/Update 的排队提示判断 Pod 更新是否使其可调度。",
+  "75": "Pod 的容忍度发生变化时调用。",
+  "86": "无需比较旧 Pod 的容忍度：污点只增不改不删，且原本已容忍的 Pod 不会被本插件拒绝。",
+  "91": "此次更新使 Pod 容忍了不可调度污点。",
+  "106": "节点事件回调：判断该变化是否让原本不可调度的 Pod 变为可调度。",
+  "115": "节点从不可调度变为可调度，或新增节点且可调度时，将该 Pod 入队。",
+  "126": "返回插件名称，用于日志等场景。",
+  "131": "Filter 在过滤扩展点被调用。",
+  "139": "Pod 容忍不可调度污点，也等同于容忍 node.Spec.Unschedulable。",
+  "151": "初始化并返回该插件实例。"
+}

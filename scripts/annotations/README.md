@@ -1,8 +1,9 @@
 # 中文注释映射（kube-scheduler v1.32.0）
 
-这些 JSON 只保存译文，不包含 Kubernetes 源码。
+这些 JSON 只保存译文，不包含 Kubernetes 源码。覆盖 `pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**` 下**所有 Go 文件（含 `_test.go`）**：**177 个文件、83,979 行、4,012 个注释块 + 152 条行尾注释 + 6 处块注释**。
 
-- `manifest.json`：9 个文件、对应映射文件、源码版本。
+- `manifest.json`：177 个文件、对应映射文件、源码版本。
+- `block_comments.json`：6 处 `/* ... */` 块注释补丁，由 `scripts/apply_block_comments.py` 应用。
 - `*.json`：`key` 是注释块最后一行的 1-based 行号，`value` 是中文译文。
 - 应用方式：在每个注释块最后一行的英文后面追加 ` // 中文译文`，不增删行、不改代码。
 
@@ -25,8 +26,8 @@ powershell -ExecutionPolicy Bypass -File scripts/apply-annotations.ps1 -SourceRo
 ## 单文件流程
 
 ```bash
-# 1. 列出注释块末行（生成空模板，填好译文）
-python scripts/annotate_comments.py --list pkg/scheduler/scheduler.go > /tmp/map.json
+# 1. 列出注释块末行与行尾注释（生成空模板，填好译文）
+python scripts/annotate_comments.py --list --scope all pkg/scheduler/scheduler.go > /tmp/map.json
 
 # 2. 应用（把 /tmp/map.json 换成实际填写的文件）
 python scripts/annotate_comments.py --apply pkg/scheduler/scheduler.go \
@@ -34,7 +35,7 @@ python scripts/annotate_comments.py --apply pkg/scheduler/scheduler.go \
   --map /tmp/map.json --in-place
 
 # 3. 校验
-python scripts/annotate_comments.py --check pkg/scheduler/scheduler.go \
+python scripts/annotate_comments.py --check --scope all pkg/scheduler/scheduler.go \
   --ref .local-backup/clean/pkg/scheduler/scheduler.go
 ```
 

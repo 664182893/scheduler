@@ -1,0 +1,19 @@
+{
+  "29": "waitingPodsMap 是线程安全的 map，维护在 permit 阶段等待的 Pod。",
+  "35": "NewWaitingPodsMap 返回一个新的 waitingPodsMap。",
+  "42": "向 map 中添加一个待定 Pod。",
+  "49": "从 map 中移除一个待定 Pod。",
+  "56": "从 map 中获取一个待定 Pod。",
+  "63": "iterate 获取读锁并遍历所有待定 Pod。",
+  "72": "waitingPod 表示在 permit 阶段等待的 Pod。",
+  "82": "newWaitingPod 返回一个新的 waitingPod 实例。",
+  "89": "用带缓冲、大小为 1 的 channel 保证非阻塞发送不会被忽略。",
+  "95": "先加锁，确保 time.AfterFunc 只会在 newWaitingPod 完成后执行。",
+  "110": "GetPod 返回待定 Pod 的引用。",
+  "115": "GetPendingPlugins 返回仍处于待定状态的 permit 插件名列表。",
+  "129": "Allow 声明该待定 Pod 已被插件放行；若所有插件都放行则发出成功信号。",
+  "138": "只有所有插件都允许后才发送成功状态。",
+  "144": "select 实现非阻塞发送，没有接收方时走 default 什么也不做。",
+  "151": "Reject 声明该待定 Pod 不可调度。",
+  "160": "select 实现非阻塞发送，没有接收方时走 default 什么也不做。"
+}

@@ -1,0 +1,7 @@
+{
+  "23": "GroupName 复用外部 v1 包定义的 API 组名。",
+  "26": "SchemeGroupVersion 复用外部 v1 包定义的组版本。",
+  "31": "localSchemeBuilder 在 SchemeBuilder 上扩展外部类型，并注册默认化与转换的初始化函数。",
+  "33": "AddToScheme 是把本 API 组和版本注册到给定 scheme 的全局函数。",
+  "40": "这里只注册手写函数，生成函数的注册放在生成文件里，以便生成文件缺失时仍能编译。"
+}

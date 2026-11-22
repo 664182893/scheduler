@@ -1,0 +1,3 @@
+{
+  "19": "本文件用于检测 Framework 接口是否被改动，以免破坏 kubernetes 组织下导入该接口的项目（如 cluster-autoscaler）的代码。"
+}

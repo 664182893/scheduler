@@ -2,40 +2,712 @@
   "version": "v1.32.0",
   "files": [
     {
-      "file": "pkg/scheduler/scheduler.go",
-      "map": "pkg__scheduler__scheduler.go.json"
+      "file": "cmd/kube-scheduler/app/config/config.go",
+      "map": "cmd__kube-scheduler__app__config__config.go.json"
     },
     {
-      "file": "pkg/scheduler/schedule_one.go",
-      "map": "pkg__scheduler__schedule_one.go.json"
+      "file": "cmd/kube-scheduler/app/options/configfile.go",
+      "map": "cmd__kube-scheduler__app__options__configfile.go.json"
     },
     {
-      "file": "pkg/scheduler/eventhandlers.go",
-      "map": "pkg__scheduler__eventhandlers.go.json"
+      "file": "cmd/kube-scheduler/app/options/configfile_test.go",
+      "map": "cmd__kube-scheduler__app__options__configfile_test.go.json"
+    },
+    {
+      "file": "cmd/kube-scheduler/app/options/deprecated.go",
+      "map": "cmd__kube-scheduler__app__options__deprecated.go.json"
+    },
+    {
+      "file": "cmd/kube-scheduler/app/options/options.go",
+      "map": "cmd__kube-scheduler__app__options__options.go.json"
+    },
+    {
+      "file": "cmd/kube-scheduler/app/options/options_test.go",
+      "map": "cmd__kube-scheduler__app__options__options_test.go.json"
+    },
+    {
+      "file": "cmd/kube-scheduler/app/server.go",
+      "map": "cmd__kube-scheduler__app__server.go.json"
+    },
+    {
+      "file": "cmd/kube-scheduler/app/server_test.go",
+      "map": "cmd__kube-scheduler__app__server_test.go.json"
+    },
+    {
+      "file": "cmd/kube-scheduler/app/testing/testserver.go",
+      "map": "cmd__kube-scheduler__app__testing__testserver.go.json"
+    },
+    {
+      "file": "cmd/kube-scheduler/scheduler.go",
+      "map": "cmd__kube-scheduler__scheduler.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/doc.go",
+      "map": "pkg__scheduler__apis__config__doc.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/latest/latest.go",
+      "map": "pkg__scheduler__apis__config__latest__latest.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/register.go",
+      "map": "pkg__scheduler__apis__config__register.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/scheme/scheme.go",
+      "map": "pkg__scheduler__apis__config__scheme__scheme.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/scheme/scheme_test.go",
+      "map": "pkg__scheduler__apis__config__scheme__scheme_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/testing/config.go",
+      "map": "pkg__scheduler__apis__config__testing__config.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/testing/defaults/defaults.go",
+      "map": "pkg__scheduler__apis__config__testing__defaults__defaults.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/types.go",
+      "map": "pkg__scheduler__apis__config__types.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/types_pluginargs.go",
+      "map": "pkg__scheduler__apis__config__types_pluginargs.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/v1/conversion.go",
+      "map": "pkg__scheduler__apis__config__v1__conversion.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/v1/default_plugins.go",
+      "map": "pkg__scheduler__apis__config__v1__default_plugins.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/v1/defaults.go",
+      "map": "pkg__scheduler__apis__config__v1__defaults.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/v1/doc.go",
+      "map": "pkg__scheduler__apis__config__v1__doc.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/v1/register.go",
+      "map": "pkg__scheduler__apis__config__v1__register.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/v1/zz_generated.conversion.go",
+      "map": "pkg__scheduler__apis__config__v1__zz_generated.conversion.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/v1/zz_generated.defaults.go",
+      "map": "pkg__scheduler__apis__config__v1__zz_generated.defaults.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/validation/validation.go",
+      "map": "pkg__scheduler__apis__config__validation__validation.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/validation/validation_pluginargs.go",
+      "map": "pkg__scheduler__apis__config__validation__validation_pluginargs.go.json"
+    },
+    {
+      "file": "pkg/scheduler/apis/config/zz_generated.deepcopy.go",
+      "map": "pkg__scheduler__apis__config__zz_generated.deepcopy.go.json"
     },
     {
       "file": "pkg/scheduler/backend/cache/cache.go",
       "map": "pkg__scheduler__backend__cache__cache.go.json"
     },
     {
+      "file": "pkg/scheduler/backend/cache/cache_test.go",
+      "map": "pkg__scheduler__backend__cache__cache_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/debugger/comparer.go",
+      "map": "pkg__scheduler__backend__cache__debugger__comparer.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/debugger/debugger.go",
+      "map": "pkg__scheduler__backend__cache__debugger__debugger.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/debugger/dumper.go",
+      "map": "pkg__scheduler__backend__cache__debugger__dumper.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/debugger/signal.go",
+      "map": "pkg__scheduler__backend__cache__debugger__signal.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/debugger/signal_windows.go",
+      "map": "pkg__scheduler__backend__cache__debugger__signal_windows.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/fake/fake_cache.go",
+      "map": "pkg__scheduler__backend__cache__fake__fake_cache.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/interface.go",
+      "map": "pkg__scheduler__backend__cache__interface.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/node_tree.go",
+      "map": "pkg__scheduler__backend__cache__node_tree.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/node_tree_test.go",
+      "map": "pkg__scheduler__backend__cache__node_tree_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/cache/snapshot.go",
+      "map": "pkg__scheduler__backend__cache__snapshot.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/heap/heap.go",
+      "map": "pkg__scheduler__backend__heap__heap.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/heap/heap_test.go",
+      "map": "pkg__scheduler__backend__heap__heap_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/queue/active_queue.go",
+      "map": "pkg__scheduler__backend__queue__active_queue.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/queue/active_queue_test.go",
+      "map": "pkg__scheduler__backend__queue__active_queue_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/queue/nominator.go",
+      "map": "pkg__scheduler__backend__queue__nominator.go.json"
+    },
+    {
       "file": "pkg/scheduler/backend/queue/scheduling_queue.go",
       "map": "pkg__scheduler__backend__queue__scheduling_queue.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/queue/scheduling_queue_test.go",
+      "map": "pkg__scheduler__backend__queue__scheduling_queue_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/backend/queue/testing.go",
+      "map": "pkg__scheduler__backend__queue__testing.go.json"
+    },
+    {
+      "file": "pkg/scheduler/eventhandlers.go",
+      "map": "pkg__scheduler__eventhandlers.go.json"
+    },
+    {
+      "file": "pkg/scheduler/eventhandlers_test.go",
+      "map": "pkg__scheduler__eventhandlers_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/extender.go",
+      "map": "pkg__scheduler__extender.go.json"
+    },
+    {
+      "file": "pkg/scheduler/extender_test.go",
+      "map": "pkg__scheduler__extender_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/autoscaler_contract/framework_contract_test.go",
+      "map": "pkg__scheduler__framework__autoscaler_contract__framework_contract_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/autoscaler_contract/lister_contract_test.go",
+      "map": "pkg__scheduler__framework__autoscaler_contract__lister_contract_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/cycle_state.go",
+      "map": "pkg__scheduler__framework__cycle_state.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/cycle_state_test.go",
+      "map": "pkg__scheduler__framework__cycle_state_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/events.go",
+      "map": "pkg__scheduler__framework__events.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/events_test.go",
+      "map": "pkg__scheduler__framework__events_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/extender.go",
+      "map": "pkg__scheduler__framework__extender.go.json"
     },
     {
       "file": "pkg/scheduler/framework/interface.go",
       "map": "pkg__scheduler__framework__interface.go.json"
     },
     {
-      "file": "pkg/scheduler/framework/types.go",
-      "map": "pkg__scheduler__framework__types.go.json"
+      "file": "pkg/scheduler/framework/interface_test.go",
+      "map": "pkg__scheduler__framework__interface_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/listers.go",
+      "map": "pkg__scheduler__framework__listers.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/parallelize/error_channel.go",
+      "map": "pkg__scheduler__framework__parallelize__error_channel.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/parallelize/parallelism.go",
+      "map": "pkg__scheduler__framework__parallelize__parallelism.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/defaultbinder/default_binder.go",
+      "map": "pkg__scheduler__framework__plugins__defaultbinder__default_binder.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/defaultpreemption/default_preemption.go",
+      "map": "pkg__scheduler__framework__plugins__defaultpreemption__default_preemption.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/defaultpreemption/default_preemption_test.go",
+      "map": "pkg__scheduler__framework__plugins__defaultpreemption__default_preemption_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/dynamicresources/allocateddevices.go",
+      "map": "pkg__scheduler__framework__plugins__dynamicresources__allocateddevices.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/dynamicresources/dra_manager.go",
+      "map": "pkg__scheduler__framework__plugins__dynamicresources__dra_manager.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/dynamicresources/dynamicresources.go",
+      "map": "pkg__scheduler__framework__plugins__dynamicresources__dynamicresources.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/dynamicresources/dynamicresources_test.go",
+      "map": "pkg__scheduler__framework__plugins__dynamicresources__dynamicresources_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/examples/multipoint/multipoint.go",
+      "map": "pkg__scheduler__framework__plugins__examples__multipoint__multipoint.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/examples/prebind/prebind.go",
+      "map": "pkg__scheduler__framework__plugins__examples__prebind__prebind.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/examples/stateful/stateful.go",
+      "map": "pkg__scheduler__framework__plugins__examples__stateful__stateful.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/feature/feature.go",
+      "map": "pkg__scheduler__framework__plugins__feature__feature.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/helper/normalize_score.go",
+      "map": "pkg__scheduler__framework__plugins__helper__normalize_score.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/helper/shape_score.go",
+      "map": "pkg__scheduler__framework__plugins__helper__shape_score.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/helper/spread.go",
+      "map": "pkg__scheduler__framework__plugins__helper__spread.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/helper/spread_test.go",
+      "map": "pkg__scheduler__framework__plugins__helper__spread_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/helper/taint.go",
+      "map": "pkg__scheduler__framework__plugins__helper__taint.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/imagelocality/image_locality.go",
+      "map": "pkg__scheduler__framework__plugins__imagelocality__image_locality.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/imagelocality/image_locality_test.go",
+      "map": "pkg__scheduler__framework__plugins__imagelocality__image_locality_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/interpodaffinity/filtering.go",
+      "map": "pkg__scheduler__framework__plugins__interpodaffinity__filtering.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/interpodaffinity/filtering_test.go",
+      "map": "pkg__scheduler__framework__plugins__interpodaffinity__filtering_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/interpodaffinity/plugin.go",
+      "map": "pkg__scheduler__framework__plugins__interpodaffinity__plugin.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/interpodaffinity/scoring.go",
+      "map": "pkg__scheduler__framework__plugins__interpodaffinity__scoring.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/interpodaffinity/scoring_test.go",
+      "map": "pkg__scheduler__framework__plugins__interpodaffinity__scoring_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodeaffinity/node_affinity.go",
+      "map": "pkg__scheduler__framework__plugins__nodeaffinity__node_affinity.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodeaffinity/node_affinity_test.go",
+      "map": "pkg__scheduler__framework__plugins__nodeaffinity__node_affinity_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodename/node_name.go",
+      "map": "pkg__scheduler__framework__plugins__nodename__node_name.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodeports/node_ports.go",
+      "map": "pkg__scheduler__framework__plugins__nodeports__node_ports.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/balanced_allocation.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__balanced_allocation.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/balanced_allocation_test.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__balanced_allocation_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/fit.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__fit.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/fit_test.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__fit_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/least_allocated.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__least_allocated.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/least_allocated_test.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__least_allocated_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/most_allocated.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__most_allocated.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/most_allocated_test.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__most_allocated_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/requested_to_capacity_ratio.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__requested_to_capacity_ratio.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/requested_to_capacity_ratio_test.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__requested_to_capacity_ratio_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/resource_allocation.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__resource_allocation.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/noderesources/resource_allocation_test.go",
+      "map": "pkg__scheduler__framework__plugins__noderesources__resource_allocation_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodeunschedulable/node_unschedulable.go",
+      "map": "pkg__scheduler__framework__plugins__nodeunschedulable__node_unschedulable.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodevolumelimits/csi.go",
+      "map": "pkg__scheduler__framework__plugins__nodevolumelimits__csi.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodevolumelimits/csi_test.go",
+      "map": "pkg__scheduler__framework__plugins__nodevolumelimits__csi_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/nodevolumelimits/utils.go",
+      "map": "pkg__scheduler__framework__plugins__nodevolumelimits__utils.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/podtopologyspread/common.go",
+      "map": "pkg__scheduler__framework__plugins__podtopologyspread__common.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/podtopologyspread/filtering.go",
+      "map": "pkg__scheduler__framework__plugins__podtopologyspread__filtering.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/podtopologyspread/filtering_test.go",
+      "map": "pkg__scheduler__framework__plugins__podtopologyspread__filtering_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/podtopologyspread/plugin.go",
+      "map": "pkg__scheduler__framework__plugins__podtopologyspread__plugin.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/podtopologyspread/scoring.go",
+      "map": "pkg__scheduler__framework__plugins__podtopologyspread__scoring.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/podtopologyspread/scoring_test.go",
+      "map": "pkg__scheduler__framework__plugins__podtopologyspread__scoring_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/queuesort/priority_sort.go",
+      "map": "pkg__scheduler__framework__plugins__queuesort__priority_sort.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/queuesort/priority_sort_test.go",
+      "map": "pkg__scheduler__framework__plugins__queuesort__priority_sort_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/registry.go",
+      "map": "pkg__scheduler__framework__plugins__registry.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/schedulinggates/scheduling_gates.go",
+      "map": "pkg__scheduler__framework__plugins__schedulinggates__scheduling_gates.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/tainttoleration/taint_toleration.go",
+      "map": "pkg__scheduler__framework__plugins__tainttoleration__taint_toleration.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/tainttoleration/taint_toleration_test.go",
+      "map": "pkg__scheduler__framework__plugins__tainttoleration__taint_toleration_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/testing/testing.go",
+      "map": "pkg__scheduler__framework__plugins__testing__testing.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/assume_cache.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__assume_cache.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/assume_cache_test.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__assume_cache_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/binder.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__binder.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/binder_test.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__binder_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/fake_binder.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__fake_binder.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/metrics/metrics.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__metrics__metrics.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/scorer.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__scorer.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/volume_binding.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__volume_binding.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumebinding/volume_binding_test.go",
+      "map": "pkg__scheduler__framework__plugins__volumebinding__volume_binding_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumerestrictions/volume_restrictions.go",
+      "map": "pkg__scheduler__framework__plugins__volumerestrictions__volume_restrictions.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumerestrictions/volume_restrictions_test.go",
+      "map": "pkg__scheduler__framework__plugins__volumerestrictions__volume_restrictions_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/plugins/volumezone/volume_zone.go",
+      "map": "pkg__scheduler__framework__plugins__volumezone__volume_zone.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/preemption/preemption.go",
+      "map": "pkg__scheduler__framework__preemption__preemption.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/preemption/preemption_test.go",
+      "map": "pkg__scheduler__framework__preemption__preemption_test.go.json"
     },
     {
       "file": "pkg/scheduler/framework/runtime/framework.go",
       "map": "pkg__scheduler__framework__runtime__framework.go.json"
     },
     {
-      "file": "pkg/scheduler/framework/plugins/defaultbinder/default_binder.go",
-      "map": "pkg__scheduler__framework__plugins__defaultbinder__default_binder.go.json"
+      "file": "pkg/scheduler/framework/runtime/framework_test.go",
+      "map": "pkg__scheduler__framework__runtime__framework_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/runtime/registry.go",
+      "map": "pkg__scheduler__framework__runtime__registry.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/runtime/registry_test.go",
+      "map": "pkg__scheduler__framework__runtime__registry_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/runtime/util_windows_test.go",
+      "map": "pkg__scheduler__framework__runtime__util_windows_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/runtime/waiting_pods_map.go",
+      "map": "pkg__scheduler__framework__runtime__waiting_pods_map.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/types.go",
+      "map": "pkg__scheduler__framework__types.go.json"
+    },
+    {
+      "file": "pkg/scheduler/framework/types_test.go",
+      "map": "pkg__scheduler__framework__types_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/metrics/metric_recorder.go",
+      "map": "pkg__scheduler__metrics__metric_recorder.go.json"
+    },
+    {
+      "file": "pkg/scheduler/metrics/metric_recorder_test.go",
+      "map": "pkg__scheduler__metrics__metric_recorder_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/metrics/metrics.go",
+      "map": "pkg__scheduler__metrics__metrics.go.json"
+    },
+    {
+      "file": "pkg/scheduler/metrics/profile_metrics.go",
+      "map": "pkg__scheduler__metrics__profile_metrics.go.json"
+    },
+    {
+      "file": "pkg/scheduler/metrics/resources/resources.go",
+      "map": "pkg__scheduler__metrics__resources__resources.go.json"
+    },
+    {
+      "file": "pkg/scheduler/metrics/resources/resources_test.go",
+      "map": "pkg__scheduler__metrics__resources__resources_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/profile/profile.go",
+      "map": "pkg__scheduler__profile__profile.go.json"
+    },
+    {
+      "file": "pkg/scheduler/profile/profile_test.go",
+      "map": "pkg__scheduler__profile__profile_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/schedule_one.go",
+      "map": "pkg__scheduler__schedule_one.go.json"
+    },
+    {
+      "file": "pkg/scheduler/schedule_one_test.go",
+      "map": "pkg__scheduler__schedule_one_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/scheduler.go",
+      "map": "pkg__scheduler__scheduler.go.json"
+    },
+    {
+      "file": "pkg/scheduler/scheduler_test.go",
+      "map": "pkg__scheduler__scheduler_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/testing/framework/fake_extender.go",
+      "map": "pkg__scheduler__testing__framework__fake_extender.go.json"
+    },
+    {
+      "file": "pkg/scheduler/testing/framework/fake_listers.go",
+      "map": "pkg__scheduler__testing__framework__fake_listers.go.json"
+    },
+    {
+      "file": "pkg/scheduler/testing/framework/fake_plugins.go",
+      "map": "pkg__scheduler__testing__framework__fake_plugins.go.json"
+    },
+    {
+      "file": "pkg/scheduler/testing/framework/framework_helpers.go",
+      "map": "pkg__scheduler__testing__framework__framework_helpers.go.json"
+    },
+    {
+      "file": "pkg/scheduler/testing/workload_prep.go",
+      "map": "pkg__scheduler__testing__workload_prep.go.json"
+    },
+    {
+      "file": "pkg/scheduler/testing/wrappers.go",
+      "map": "pkg__scheduler__testing__wrappers.go.json"
+    },
+    {
+      "file": "pkg/scheduler/util/assumecache/assume_cache.go",
+      "map": "pkg__scheduler__util__assumecache__assume_cache.go.json"
+    },
+    {
+      "file": "pkg/scheduler/util/assumecache/assume_cache_test.go",
+      "map": "pkg__scheduler__util__assumecache__assume_cache_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/util/pod_resources.go",
+      "map": "pkg__scheduler__util__pod_resources.go.json"
+    },
+    {
+      "file": "pkg/scheduler/util/queue/fifo.go",
+      "map": "pkg__scheduler__util__queue__fifo.go.json"
+    },
+    {
+      "file": "pkg/scheduler/util/queue/fifo_test.go",
+      "map": "pkg__scheduler__util__queue__fifo_test.go.json"
+    },
+    {
+      "file": "pkg/scheduler/util/utils.go",
+      "map": "pkg__scheduler__util__utils.go.json"
+    },
+    {
+      "file": "pkg/scheduler/util/utils_test.go",
+      "map": "pkg__scheduler__util__utils_test.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/config/v1/doc.go",
+      "map": "staging__k8s.io__kube-scheduler__config__v1__doc.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/config/v1/register.go",
+      "map": "staging__k8s.io__kube-scheduler__config__v1__register.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/config/v1/types.go",
+      "map": "staging__k8s.io__kube-scheduler__config__v1__types.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/config/v1/types_pluginargs.go",
+      "map": "staging__k8s.io__kube-scheduler__config__v1__types_pluginargs.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/config/v1/zz_generated.deepcopy.go",
+      "map": "staging__k8s.io__kube-scheduler__config__v1__zz_generated.deepcopy.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/extender/v1/doc.go",
+      "map": "staging__k8s.io__kube-scheduler__extender__v1__doc.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/extender/v1/types.go",
+      "map": "staging__k8s.io__kube-scheduler__extender__v1__types.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/extender/v1/types_test.go",
+      "map": "staging__k8s.io__kube-scheduler__extender__v1__types_test.go.json"
+    },
+    {
+      "file": "staging/k8s.io/kube-scheduler/extender/v1/zz_generated.deepcopy.go",
+      "map": "staging__k8s.io__kube-scheduler__extender__v1__zz_generated.deepcopy.go.json"
     }
   ]
 }

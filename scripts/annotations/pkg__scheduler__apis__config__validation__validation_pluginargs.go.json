@@ -1,0 +1,16 @@
+{
+  "34": "supportedScoringStrategyTypes 必须用字符串集合，以便配合 field.Unsupported 使用。",
+  "41": "ValidateDefaultPreemptionArgs 校验 DefaultPreemptionArgs 是否正确。",
+  "61": "validateMinCandidateNodesPercentage 校验最小候选节点百分比在允许范围内。",
+  "70": "validateMinCandidateNodesAbsolute 校验最小候选节点绝对数在允许范围内。",
+  "78": "ValidateInterPodAffinityArgs 校验 InterPodAffinityArgs 是否正确。",
+  "83": "validateHardPodAffinityWeight 校验权重在允许范围内。",
+  "99": "ValidatePodTopologySpreadArgs 复用核心校验逻辑，并额外要求 labelSelector 为空。",
+  "222": "ValidateNodeResourcesBalancedAllocationArgs 校验该参数是否配置正确。",
+  "239": "ValidateNodeAffinityArgs 校验 NodeAffinityArgs 是否正确。",
+  "252": "待 API 加入 requiredDuringSchedulingRequiredDuringExecution 后补充校验。",
+  "262": "VolumeBindingArgsValidationOptions 保存校验所需的不同设置。",
+  "267": "ValidateVolumeBindingArgs 校验 VolumeBindingArgs 是否配置正确。",
+  "274": "ValidateVolumeBindingArgsWithOptions 结合调度器特性校验参数与选项。",
+  "287": "特性关闭时若配置非 nil 就报错，避免将来开启特性时意外配置生效。"
+}

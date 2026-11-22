@@ -1,0 +1,4 @@
+{
+  "35": "SetupPluginWithInformers 用带 sharedLister 和包含给定对象的 SharedInformerFactory 的 handle 创建插件，并启动 informer。",
+  "62": "SetupPlugin 用带给定 sharedLister 的框架 handle 创建插件。"
+}

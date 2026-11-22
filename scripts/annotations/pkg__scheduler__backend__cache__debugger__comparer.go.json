@@ -1,0 +1,6 @@
+{
+  "32": "CacheComparer 是调度器缓存比较器的一种实现。",
+  "40": "Compare 将 NodeLister 得到的节点和 Pod 与 Cache 的快照进行比较。",
+  "70": "CompareNodes 比较实际节点与缓存节点。",
+  "85": "ComparePods 比较实际 Pod 与缓存 Pod。"
+}

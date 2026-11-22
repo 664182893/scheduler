@@ -1,0 +1,5 @@
+{
+  "38": "createCycleStateWithFakeData 用给定的 data 创建存放 fakeData 的 *CycleState。",
+  "49": "isCycleStateEqual 判断两个存放 fakeData 的 CycleState 是否相等；不相等时返回说明原因的提示。",
+  "141": "这种情况下无需执行剩余的检查。"
+}

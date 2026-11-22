@@ -1,0 +1,7 @@
+{
+  "24": "ErrorChannel 支持非阻塞的发送与接收以捕获错误，通道最多保留一个错误，其余错误被忽略直到现有错误被取走。",
+  "29": "SendError 发送错误而不阻塞发送方。",
+  "38": "SendErrorWithCancel 发送错误且不阻塞发送方，并调用 cancel 函数。",
+  "44": "ReceiveError 接收错误而不阻塞接收方。",
+  "54": "NewErrorChannel 返回一个新的 ErrorChannel。"
+}

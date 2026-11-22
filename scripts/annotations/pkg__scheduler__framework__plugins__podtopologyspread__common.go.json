@@ -1,0 +1,11 @@
+{
+  "37": "topologySpreadConstraint 是 v1.TopologySpreadConstraint 的内部版本，在此解析选择器；字段导出以便测试比较。",
+  "49": "为向后兼容，此处忽略解析错误。",
+  "65": "使用 DefaultConstraints 及匹配该 Pod 的各类控制器选择器来构建默认约束。",
+  "81": "nodeLabelsMatchSpreadConstraints 检查节点标签是否包含约束中的全部拓扑键。",
+  "155": "跳过正在终止的 Pod（见 #87621）。",
+  "166": "podLabelsMatchSpreadConstraints 返回标签是否匹配任意一条拓扑分布约束中的选择器。",
+  "116": "MinDomains 为 nil 时按 1 处理。",
+  "117": "NodeAffinityPolicy 为 nil 时按 \"Honor\" 处理。",
+  "118": "NodeTaintsPolicy 为 nil 时按 \"Ignore\" 处理。"
+}

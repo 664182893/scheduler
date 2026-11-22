@@ -1,0 +1,4 @@
+{
+  "30": "允许用户对 CPU、内存等核心资源以及加速器等扩展资源做装箱（bin packing）打分。",
+  "67": "MaxCustomPriorityScore 与调度器的 MaxNodeScore 可能不同，需把得分缩放到调度器的分数区间。"
+}

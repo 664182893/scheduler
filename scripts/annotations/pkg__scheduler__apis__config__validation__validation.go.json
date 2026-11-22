@@ -1,0 +1,10 @@
+{
+  "35": "ValidateKubeSchedulerConfiguration 校验 KubeSchedulerConfiguration 结构。",
+  "42": "待 ResourceLock 下线后可移除此段：只允许值为 leases 的 ResourceLock。",
+  "100": "invalidPluginsByVersion 维护各版本中已移除或废弃的插件；新增组件配置版本时记得补一条记录。",
+  "114": "isPluginInvalid 判断插件在给定或更早的组件配置版本中是否已被移除或废弃。",
+  "198": "类型不匹配，无需校验 args。",
+  "204": "校验函数可能返回 Aggregate，这里先追加，最终在整体校验时展平。",
+  "251": "validateExtenders 校验调度器配置的 extender。",
+  "283": "validateExtendedResourceName 检查名称是否为合法的扩展资源名。"
+}

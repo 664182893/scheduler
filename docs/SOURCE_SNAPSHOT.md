@@ -39,22 +39,20 @@ scheduler/
 >
 > 本文所有 `文件:行号` 均以 v1.32.0 的 `pkg/scheduler/` 为准，与源码根放在哪里无关。
 
-## 注释汉化（2026-11-15）
+## 注释汉化（2026-11-22 全量）
 
-`pkg/scheduler/` 下 **9 个核心文件**已完成中英对照汉化：**在每个英文注释块最后一行的末尾追加 ` // 中文译文`，英文原文与行数完全不变**。
+调度器相关**全部 Go 源码**（含 `_test.go`）已完成中英对照汉化：`//` 注释在英文后追加 ` // 中文`，`/* ... */` 注释在块内追加中文；行数完全不变。
 
-| 文件 | 总行数 | 注释块 |
-|---|---|---|
-| `scheduler.go` | 589 | 49 |
-| `schedule_one.go` | 1134 | 95 |
-| `eventhandlers.go` | 665 | 28 |
-| `backend/cache/cache.go` | 760 | 54 |
-| `backend/queue/scheduling_queue.go` | 1397 | 155 |
-| `framework/interface.go` | 954 | 156 |
-| `framework/types.go` | 1302 | 139 |
-| `framework/runtime/framework.go` | 1671 | 111 |
-| `framework/plugins/defaultbinder/default_binder.go` | 63 | 5 |
-| **合计** | **8535** | **792** |
+范围：`pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**`，**包含测试文件**。
+
+| 目录 | 文件 | 行数 | 注释块 | 行尾注释 |
+|---|---|---|---|---|
+| `pkg/scheduler/**` | 158 | 79,074 | 3,667 | 131 |
+| `cmd/kube-scheduler/**` | 10 | 2,975 | 115 | 21 |
+| `staging/k8s.io/kube-scheduler/**` | 9 | 1,930 | 230 | 0 |
+| **合计** | **177** | **83,979** | **4,012** | **152** |
+
+其中测试文件 52 个。译文共 4,164 条映射 + 6 处块注释补丁。
 
 因为「只追加、不增行」，**本文所有 `文件:行号` 在汉化后依然精确有效**，无需换算。
 
@@ -62,8 +60,9 @@ scheduler/
 
 译文不写进文档，存在 `scripts/annotations/`：
 
-- `manifest.json`：9 个文件与映射文件的对应关系，及源码版本（v1.32.0）。
-- `*.json`：`key` = 注释块最后一行行号（1-based），`value` = 中文译文；只含译文，不含源码。
+- `manifest.json`：177 个文件与映射文件的对应关系，及源码版本（v1.32.0）。
+- `*.json`：`key` = 注释块最后一行或行尾注释所在行（1-based），`value` = 中文译文；只含译文，不含源码。
+- `block_comments.json`：6 处 `/* ... */` 块注释的 old/new 补丁，由 `apply_block_comments.py` 应用。
 
 重新拉源码后，一条命令恢复：
 
@@ -78,17 +77,18 @@ powershell -ExecutionPolicy Bypass -File scripts/apply-annotations.ps1
 powershell -ExecutionPolicy Bypass -File scripts/apply-annotations.ps1 -SourceRoot D:\code\GoCode\src\scheduler\k8s-v1.32.0
 ```
 
-脚本会跳过已含中文的文件，逐文件校验行数、代码前缀、注释覆盖和 `gofmt`。
+脚本会跳过已含中文的文件，逐文件校验行数、代码（去注释后）一致性、注释覆盖和 `gofmt`，最后应用块注释补丁。
 
 ### 校验方式
 
 ```bash
 cd /c/Users/Wp_/go/src/scheduler
 
-gofmt -l pkg/scheduler/          # 无输出 = 格式合规
-go build ./pkg/scheduler/...     # 通过
+gofmt -l pkg/scheduler cmd/kube-scheduler staging/k8s.io/kube-scheduler   # 无输出 = 格式合规
+go build ./pkg/scheduler/... ./cmd/kube-scheduler/...                     # 通过
+go test -run '^$' ./pkg/scheduler/... ./cmd/kube-scheduler/...            # 测试文件可编译
 
-# 行数与代码不变：每个带注释的行都以干净原件对应行为前缀
+# 行数与代码（去注释后）不变
 python scripts/apply_annotations.py --source-root .   # 已汉化时全部 SKIP
 ```
 

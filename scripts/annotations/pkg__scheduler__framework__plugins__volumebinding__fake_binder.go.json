@@ -1,0 +1,10 @@
+{
+  "26": "保存假卷绑定器的配置项",
+  "36": "创建假卷绑定器，供测试中的拓扑感知卷绑定决策使用",
+  "43": "FakeVolumeBinder 是供测试使用的假卷绑定器",
+  "52": "实现 GetPodVolumeClaims，返回空的卷声明集合",
+  "57": "实现 FindPodVolumes，返回预设的冲突原因与错误",
+  "62": "实现 AssumePodVolumes，标记已调用并返回预设结果",
+  "68": "实现 RevertAssumedPodVolumes，空实现",
+  "71": "实现 BindPodVolumes，标记已调用并返回预设错误"
+}

@@ -4,6 +4,22 @@
 > 规则：每个空都按「输入 / 输出 / 失败谁处理」三样写；填不出就写「断了」，不要猜。
 > 对照答案：`docs/SCHEDULER_STUDY_GUIDE.md`、`docs/review-2026-11-18.md`、`docs/SCHEDULER_CALLCHAIN.md`。
 
+- 当前进度：第 5 步 `RunPreFilterPlugins`（第 4 步已通过）
+- 最近整理：2026-11-22
+
+## 目录
+
+- 图 1：主干 6 阶段
+- 图 2：ScheduleOne 同步 / 异步
+- 图 3：schedulePod 四个短路口
+- 图 4：PreFilter / Filter / PostFilter
+- 图 5：第 4 步 findNodesThatFitPod
+- 图 6：第 5 步 RunPreFilterPlugins
+- 填空表
+- 自查清单
+- 用法
+- 怎么改图
+
 ## 图 1：主干 6 阶段（粗颗粒）
 
 ```mermaid
@@ -62,7 +78,13 @@ graph TD
   PF --> PF1["填「DefaultPreemption 做什么，返回什么 Status」"]
 ```
 
-## 图 5：第 4 步 `findNodesThatFitPod`（当前）
+### 图 4 校对
+
+- PreFilter **跑 1 次**（不是 n 次）；它先于节点遍历。
+- `PreFilterResult.NodeNames` 缩小的是**候选节点集**，不是「过滤状态」；被排除的节点标成 `UnschedulableAndUnresolvable`。
+- Filter 才是逐节点、并行。
+
+## 图 5：第 4 步 `findNodesThatFitPod`（已完成）
 
 ### 5-1 主流程与 PreFilter 的三种 Status
 
@@ -157,12 +179,133 @@ graph TD
 
 一句话：**`Diagnosis` 是给三个下游（事件、队列、抢占）共用的一份失败记录。**
 
-本步要填的 4 个空：
+### 第 4 步要填的 4 个空
 
 1. PreFilter `Rejected` 分支：Diagnosis 怎么记、返回什么、为什么不是 error？
 2. PreFilter `Error` 分支：返回什么、谁处理？
 3. `preRes.NodeNames` 怎么构造 `nodes`？缺失节点和排除节点怎么标？
 4. `nextStartNodeIndex` 怎么更新？为什么出错也更新？
+
+## 图 6：第 5 步 `RunPreFilterPlugins`（当前）
+
+### 6-1 主循环与三种 Status
+
+```mermaid
+graph TD
+  A["RunPreFilterPlugins 开始"] --> B["遍历 preFilterPlugins"]
+  B --> C{"plugin status"}
+  C -->|"Skip"| S["填：记录到SkipPlugins，然后跳过该插件，本次调度结束后，会让同名的filter插件和prefilterExtensions都跳过。"]
+  C -->|"Success"| D["填：如果它返回了节点集合（!r.AllNodes()），把插件名记进 pluginsWithNodes，结果合并到总结果result里面，如果合并后集群节点是空集，那么断定当前节点不存在同时满足所有prefilter插件，返回空集合+UnschedulableAndUnresolvable"]
+  C -->|"UnschedulableAndUnresolvable"| U["填：立刻返回"]
+  C -->|"Unschedulable"| E["填：把状态记录到returnStatus = s,继续完成剩下prefilter"]
+  C -->|"Error"| X["填：包装成error返回，调度终止"]
+  D --> F{"合并后 NodeNames 为空？"}
+  F -->|"是"| G["填：返回UnschedulableAndUnresolvable？输出节点不满足plugins."]
+  F -->|"否"| B
+  U --> H["填：返回return nil, s, nil"]
+  X --> I["填：返回AsStatus"]
+  E --> B
+  G --> J["填：返回UnschedulableAndUnresolvable"]
+  B --> K["遍历结束：返回result, returnStatus, pluginsWithNodes"]
+```
+
+### 6-2 `PreFilterResult.Merge` 的四种组合
+
+```mermaid
+graph TD
+  A{"p.AllNodes()?"} -->|"是"| B{"in.AllNodes()?"}
+  B -->|"是"| C["填：nil"]
+  B -->|"否"| D["填：返回in"]
+  A -->|"否"| E{"in.AllNodes()?"}
+  E -->|"是"| F["填：返回p"]
+  E -->|"否"| G["填：取交集（原填并集，见 6-3 校对）"]
+```
+
+![alt text](image.png)
+
+`in` 指的是**当前插件**返回的 `PreFilterResult`；`in.AllNodes()` 表示当前插件没有限制节点（`NodeNames == nil`）。
+
+#### `framework.go:751-763` 在做什么
+
+- `!r.AllNodes()`：当前插件限制了节点集 → 把插件名记进 `pluginsWithNodes`；
+- `result = result.Merge(r)`：把当前插件的结果并入总结果；
+- 如果合并后 `NodeNames` 为空：没有任何节点能**同时**满足所有 PreFilter 插件 → 返回 `UnschedulableAndUnresolvable`，消息列出 `pluginsWithNodes`。
+
+### 6-3 第 5 步校对
+
+| 点 | 你的答案 | 判定 | 正确表述 |
+|---|---|---|---|
+| `Skip` | 记录到 `SkipPlugins`，让同名 Filter 和 PreFilterExtensions 跳过 | ✅ | 消费方是 `RunFilterPlugins`（`framework.go:885`）和 PreFilterExtensions（`:794`/`:839`），不是 `schedulingCycle` |
+| `UnschedulableAndUnresolvable` | 立刻返回 | ✅ | 返回 `nil, s, nil`；本轮不抢占 |
+| `Unschedulable` | 记录 `returnStatus`，继续跑完 | ✅ | 跑完所有 PreFilter，最后返回 `result, returnStatus, pluginsWithNodes` |
+| `Merge` 两个 false | 取并集 | 🔴 | 取**交集**（`Intersection`）；并集会让节点变多，违背「同时满足」 |
+| 交集为空 | 返回 Unresolvable | ✅ | 返回 `result, UnschedulableAndUnresolvable(msg), pluginsWithNodes`；消息是 “node(s) didn't satisfy plugin(s) ... simultaneously” |
+
+一句话：**Merge 是交集，不是并集。**
+
+### 第 5 步要填的 4 个空
+
+1. `Skip` 记录到哪个 state？谁消费它？
+2. `UnschedulableAndUnresolvable` 和 `Unschedulable` 为什么一个立刻返回、一个继续跑？
+3. `Merge` 的四种组合分别返回什么？
+4. 多个插件的 `NodeNames` 交集为空时，返回什么 Status？消息怎么拼？
+
+## 图 7：第 6 步 `findNodesThatPassFilters`（当前）
+
+### 7-1 找多少个可行节点
+
+```mermaid
+graph TD
+  A["numAllNodes"] --> B{"numAllNodes < 100?"}
+  B -->|"是"| C["填：返回多少？"]
+  B -->|"否"| D{"percentage 有配置？"}
+  D -->|"是"| E["填：用哪个 percentage？"]
+  D -->|"否"| F["填：默认 percentage 公式？"]
+  E --> G["numNodes = numAllNodes * percentage / 100"]
+  F --> G
+  G --> H{"numNodes < 100?"}
+  H -->|"是"| I["填：返回多少？"]
+  H -->|"否"| J["返回 numNodes"]
+  K["没有 Filter / Score / Extender"] --> L["填：numNodesToFind = ? 为什么？"]
+```
+
+### 7-2 并行 checkNode 与提前 cancel
+
+```mermaid
+graph TD
+  A["Parallelizer.Until 并行跑 checkNode(i)"] --> B["node = nodes[(nextStartNodeIndex+i)%numAllNodes]"]
+  B --> C["RunFilterPluginsWithNominatedPods"]
+  C --> D{"status"}
+  D -->|"Error"| E["填：怎么传错？cancel 吗？"]
+  D -->|"Success"| F["填：怎么计数/存放？超过 numNodesToFind 怎么办？"]
+  D -->|"Unschedulable"| G["填：先存哪？何时写 Diagnosis？"]
+  F --> H["feasibleNodes = feasibleNodes[:feasibleNodesLen]"]
+  G --> I["结束：填两个写入方法"]
+  E --> J["返回 feasibleNodes, err"]
+  H --> K["返回 feasibleNodes, nil"]
+  I --> K
+```
+
+### 7-3 Nominated pods 两轮 Filter
+
+```mermaid
+graph TD
+  A["RunFilterPluginsWithNominatedPods"] --> B["i=0：addNominatedPods"]
+  B --> C{"podsAdded?"}
+  C -->|"否"| D["填：跑几轮？"]
+  C -->|"是"| E["第一轮 Filter"]
+  E --> F{"成功?"}
+  F -->|"否"| G["填：还跑第二轮吗？"]
+  F -->|"是"| H["i=1：不加 nominated pods，跑第二轮"]
+  H --> I["填：为什么两轮都要过？"]
+```
+
+第 6 步要填的 4 个空：
+
+1. `numFeasibleNodesToFind` 的默认公式？为什么至少 100？为什么没有 Filter/Score/Extender 时直接取 1？
+2. `checkNode` 的 Error / Success / Unschedulable 三个分支分别做什么？超过 `numNodesToFind` 时为什么 cancel 并减一？
+3. 提前 cancel 安全吗？会不会漏掉更优节点？
+4. `RunFilterPluginsWithNominatedPods` 为什么要两轮？第一轮失败或没有提名 Pod 时怎样？
 
 ## 填空表
 

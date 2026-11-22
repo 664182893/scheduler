@@ -1,0 +1,5 @@
+{
+  "30": "CacheDebugger 提供用于调试的缓存信息检查与写出能力。",
+  "36": "New 创建一个 CacheDebugger。",
+  "58": "ListenForSignal 启动一个 goroutine，当进程收到 SIGINT（Windows）或 SIGUSR2（非 Windows）信号时触发 CacheDebugger 的行为。"
+}

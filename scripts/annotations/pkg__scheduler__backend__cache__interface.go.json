@@ -1,0 +1,19 @@
+{
+  "59": "Cache 收集 Pod 信息并提供节点级聚合视图，以 Pod 为中心增量更新，并说明缓存状态机及相关假设。",
+  "62": "NodeCount 返回缓存中的节点数量，仅限测试使用。",
+  "66": "PodCount 返回缓存中的 Pod 数量（含已删除节点上的 Pod），仅限测试使用。",
+  "71": "AssumePod 假定 Pod 已调度并把其信息聚合到对应节点，同时决定未确认 Pod 的过期策略。",
+  "74": "FinishBinding 表示假定 Pod 的缓存可以过期。",
+  "77": "ForgetPod 从缓存中移除一个假定的 Pod。",
+  "81": "AddPod 确认假定的 Pod，或在 Pod 过期后将其重新加入缓存并重新累加其信息。",
+  "84": "UpdatePod 移除旧 Pod 的信息并加入新 Pod 的信息。",
+  "87": "RemovePod 移除一个 Pod，并从其所在节点上扣减相应信息。",
+  "91": "GetPod 返回缓存中与指定 Pod 命名空间和名称相同的 Pod。",
+  "94": "IsAssumedPod 在 Pod 已假定且未过期时返回 true。",
+  "98": "AddNode 添加节点的整体信息，并返回新增 NodeInfo 的副本。",
+  "102": "UpdateNode 更新节点的整体信息，并返回更新后 NodeInfo 的副本。",
+  "105": "RemoveNode 移除节点的整体信息。",
+  "112": "UpdateSnapshot 用缓存当前内容更新传入的快照，其中的 NodeInfo 已聚合该节点上的 Pod 信息。",
+  "115": "Dump 生成当前缓存状态的转储。",
+  "119": "Dump 表示缓存状态的转储。"
+}

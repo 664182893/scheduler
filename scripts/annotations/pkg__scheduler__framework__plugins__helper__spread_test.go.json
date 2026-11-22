@@ -1,0 +1,8 @@
+{
+  "130": "创建假 Service 对象",
+  "132": "创建假 Service",
+  "147": "创建假 ReplicaSet",
+  "165": "创建假 ReplicationController",
+  "181": "创建假 StatefulSet",
+  "248": "如有需要，则添加假资源"
+}

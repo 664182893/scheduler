@@ -1,0 +1,3 @@
+{
+  "46": "NewInTreeRegistry 用所有内置插件构建注册表，树外插件可通过 WithFrameworkOutOfTreeRegistry 注册。"
+}

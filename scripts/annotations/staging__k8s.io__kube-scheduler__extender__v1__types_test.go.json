@@ -1,0 +1,3 @@
+{
+  "34": "TestCompatibility 验证 extender/v1 中的类型能编码为 JSON 再解码回来，即使字段为小写也可行；这些类型是围绕 JSON tag 编写的，现在需要强制其一致性。@TODO(88634)：v2 应为这些类型定义规范的 JSON tag，把字段大小写统一为一种方式。"
+}
