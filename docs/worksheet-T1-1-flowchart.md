@@ -53,8 +53,8 @@ graph TD
 
 ```mermaid
 graph TD
-  P["PreFilter：填「跑几次，范围」"] --> P1["填「PreFilterResult 怎么缩小节点集」"]
-  P1 --> F["Filter：填「跑几次，是否并行」"]
+  P["PreFilter：填「跑n次，范围主要是nodeaffinity」"] --> P1["填「PreFilterResult过滤掉UnschedulableAndUnresolvable和unSchedulable的状态的节点，剩余的即是通过prefilter的可以进行filter的节点」"]
+  P1 --> F["Filter：填「n次，并行」"]
   F --> F1["填「第一个失败怎么办，原因写哪」"]
   F1 --> G{"可行节点数 > 0？"}
   G -->|"是"| S["填「下一步做什么」"]
@@ -72,37 +72,90 @@ graph TD
   B --> C["RunPreFilterPlugins"]
   C --> D{"PreFilter Status"}
   D -->|"Success"| E{"preRes.AllNodes()?"}
-  D -->|"Rejected"| R["填：Diagnosis 怎么记？返回什么？为什么不是 error？"]
-  D -->|"Error"| X["填：返回什么？谁处理？"]
+  D -->|"Rejected"| R["不知道是啥？return nil, diagnosis, nil？因为它是没通过prefilter但是被插件拒绝了"]
+  D -->|"Error"| X["填：返回return nil, diagnosis, s.AsError()？这种情况是feasiblenodes=0？"]
   E -->|"true"| F["nodes = allNodes"]
-  E -->|"false"| G["填：怎么用 NodeNames 构造 nodes？缺失/排除节点怎么标？"]
+  E -->|"false"| G["填：nodes = append(nodes, nodeInfo),这里为什么会存在没有在快照里面的节点？"]
   F --> H["findNodesThatPassFilters（并行）"]
   G --> H
-  H --> I["填：nextStartNodeIndex 怎么更新？出错也更新吗？"]
+  H --> I["填：nextStartNodeIndex只会用于并行检查节点，给fesibleNodes轮转获取节点，保证不同pod扫描起点不同"]
   I --> J["findNodesThatPassExtenders"]
-  J --> K["填：返回哪三个值？Extender 过滤后补什么？"]
+  J --> K["填：return feasibleNodesAfterExtender, diagnosis, nil？extender过滤后会把候选集收缩"]
 ```
+PS：
+假设候选节点 1000 个，本轮只需要找 100 个可行节点：
+第一轮：第 1 个 Pod 0 ~ 99 100（游标位置）
+第二轮：第 2 个 Pod 100 ~ 199 200
+
+为什么需要这样
+因为 Filter 是提前停止的：找到足够多的可行节点后就不再继续扫描。
+如果每个 Pod 都从 0 开始扫，那么排在后面的节点可能永远轮不到被检查，导致节点利用率不均。游标轮转让扫描窗口在不同 Pod 之间错开，长期看每个节点都有机会被检查。
+
+### 5-1 校对（你填的三处）
+
+1. **Rejected 分支**：完整动作是 `SetAbsentNodesStatus(s)` + `PreFilterMsg = s.Message()` + `AddPluginStatus(s)`，然后 `return nil, diagnosis, nil`。不返回 error，是因为「拒绝」是正常的不可调度，不是故障；下游才能生成 `FitError` 并跑 PostFilter。
+2. **Error 分支**：返回 `s.AsError()` 对，但**不是「feasibleNodes=0」**。它是插件执行出错，`schedulePod` 把 error 往上抛，`schedulingCycle` 走 `AsStatus` → Error，**不会抢占**。
+3. **NodeNames 里为什么会有快照中不存在的节点**：`PreFilterResult` 是插件算出来的，可能包含已删除/过期/拼错的节点名；`snapshot.Get` 失败就跳过，剩下的节点统一标成 `UnschedulableAndUnresolvable`。
 
 ### 5-2 `NominatedNodeName` 提前返回
 
 ```mermaid
 graph TD
   A{"NominatedNodeName 非空？"} -->|"是"| B["evaluateNominatedNode"]
-  B --> C["填：里面跑哪两步？"]
+  B --> C["执行findNodesThatPassFilters以及findNodesThatPassExtenders"]
   C --> D{"feasibleNodes 非空？"}
-  D -->|"是"| E["填：返回什么？跳过哪一步？"]
+  D -->|"是"| E["return feasibleNodes, diagnosis, nil，就跳过了所有node的filter，直接调度该pod到该节点"]
   D -->|"否"| F["继续全量扫描"]
   A -->|"否"| F
 ```
 
-### 5-3 `Diagnosis` 的四个字段
+### 5-3 `Diagnosis` 的五个字段
 
-| 字段 | 谁写 | 什么时候写 |
-|---|---|---|
-| `NodeToStatus` | 填 | 填 |
-| `UnschedulablePlugins` | 填 | 填 |
-| `PreFilterMsg` | 填 | 填 |
-| `PostFilterMsg` | 填 | 填 |
+> `Diagnosis` 是跨阶段的共享失败账本：PreFilter / Filter / Extender / Reserve·Permit / PostFilter 都往里写，最后由 `FitError.Error()` 汇总成事件。
+
+| 字段 | 谁写 | 什么时候写 | 谁读 |
+|---|---|---|---|
+| `NodeToStatus` | PreFilter / Filter / Extender / Reserve·Permit / bindingCycle | 节点或整批节点被拒时 | `FitError.Error()`、`DefaultPreemption`、`EvaluatedNodes` |
+| `UnschedulablePlugins` | PreFilter 返回值 / `AddPluginStatus` / Extender | 插件返回 `Unschedulable` / `Unresolvable` 时 | `handleSchedulingFailure` → `podInfo` → 队列重试 |
+| `PendingPlugins` | `AddPluginStatus` | 插件返回 `Pending` 时 | 同上 |
+| `PreFilterMsg` | `findNodesThatFitPod` | PreFilter 拒绝 Pod 时 | `FitError.Error()` |
+| `PostFilterMsg` | `schedulingCycle` | PostFilter 跑完后 | `FitError.Error()` |
+
+#### 具体写入点
+
+**`NodeToStatus`**（指针，按值传 `Diagnosis` 时 map 仍共享）：
+
+- PreFilter 拒绝：`SetAbsentNodesStatus(s)`（`schedule_one.go:481`）
+- PreFilterResult 缩小节点集：被排除的节点标成 `UnschedulableAndUnresolvable`（`:514`）
+- Filter 逐节点拒绝：`Set(item.node, item.status)`（`:664`）
+- Extender 拒绝：`:734`
+- Reserve / Permit 单节点失败：`:223`、`:247`
+- bindingCycle 的 WaitOnPermit / PreBind 失败：`:289`、`:306`
+
+**`UnschedulablePlugins`**：
+
+- PreFilter 直接赋值：`diagnosis.UnschedulablePlugins = unscheduledPlugins`（`:475`）
+- `AddPluginStatus` 从 Status 取插件名（`framework/types.go:527-531`）
+- Extender 过滤掉节点后补 `framework.ExtenderName`（`:538-541`）
+
+**`PendingPlugins`**：
+
+- 只有 `AddPluginStatus` 在 `Code() == Pending` 时写（`framework/types.go:533-537`）
+
+**`PreFilterMsg` / `PostFilterMsg`**：
+
+- `PreFilterMsg`：PreFilter 拒绝时写一次（`:485`）
+- `PostFilterMsg`：PostFilter 跑完后写一次（`:177`）
+
+#### 为什么要分这么多字段
+
+因为消费者不同：
+
+- `PreFilterMsg` + `NodeToStatus` + `PostFilterMsg` → 给 `FitError.Error()` 拼 `FailedScheduling` 事件；
+- `UnschedulablePlugins` / `PendingPlugins` → 给队列用，决定 Pod 什么时候被重新唤醒；
+- `NodeToStatus` → 还给抢占用，`UnschedulableAndUnresolvable` 的节点不会被选去抢占。
+
+一句话：**`Diagnosis` 是给三个下游（事件、队列、抢占）共用的一份失败记录。**
 
 本步要填的 4 个空：
 
