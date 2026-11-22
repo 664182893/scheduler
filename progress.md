@@ -1,15 +1,16 @@
 # 进度总表
 
-- 最近更新：2026-11-18
+- 最近更新：2026-11-22
 - 当前任务：**T1-1 追一个 Pod 的一生**
 - 当前粒度：**细颗粒 12 步 · 第 3 步（`schedulePod`）已通过；下一步第 4 步（`findNodesThatFitPod`）**
 - 源码版本：kube-scheduler v1.32.0
 - 每日执行：见 `plan/daily-plan.md`
 - 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
-- 注释汉化：2026-11-18 本机重新拉取干净 v1.32.0，`pkg/scheduler/` 已恢复为原始源码（行号有效）；9 个文件的译文映射保留在 `scripts/annotations/`，需要时用 `scripts/apply-annotations.*` 一键恢复
+- 注释汉化：2026-11-22 已完成调度器非测试源码 124 个文件（`pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**`，排除 `*_test.go`）的中文注释；映射在 `scripts/annotations/`，一键恢复用 `scripts/apply-annotations.*`
 - 主干文档：`docs/T1-1-pod-lifecycle-6stages.md`（带行号超链接）
 - 回顾总纲：`docs/SCHEDULER_STUDY_GUIDE.md`（汇编版，含机制、失败矩阵、自测、行号速查）
 - 当日复盘：`docs/review-2026-11-18.md`（11-15 的见 `docs/review-2026-11-15.md`）
+- 练习：`docs/worksheet-T1-1-flowchart.md`（流程图填空）
 
 ## 下次入口
 
@@ -256,6 +257,8 @@
 - **2026-11-18**：本机拉取远端最新 `03ea59b`，同步第 3 步记录；再次用模块缓存恢复 9 个核心文件为干净 v1.32.0，`pkg/scheduler` 与模块缓存逐文件一致。注释映射保留在 `scripts/annotations/`。
 - **2026-11-18（第 3 步收口）**：追问答完；纠正最终 Status 为 `NewStatus(Unschedulable).WithError(err)`（`:188`），`WithPlugin` 在 `RunPostFilterPlugins`（`framework.go:961`）；确认 trace 默认阈值与 V3/V4 关系。G16/G17 关闭，第 3 步通过。
 - **2026-11-18（复盘）**：生成 `docs/review-2026-11-18.md`，覆盖 `schedulePod` 四短路、`ErrNoNodesAvailable`/`FitError`、trace vs FitError、PreFilter/Filter/PostFilter 分工。
+- **2026-11-18（练习）**：新增 `docs/worksheet-T1-1-flowchart.md`，把 6 阶段、`ScheduleOne` 分叉、`schedulePod` 四短路、PreFilter/Filter/PostFilter 做成填空图。
+- **2026-11-22**：把汉化扩到调度器全部非测试源码：`pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**`，共 124 个文件、34,144 行、3,032 个注释块（3,033 条译文）。映射写入 `scripts/annotations/` 并登记到 manifest；`apply_annotations.py` 增加只读文件处理与「已汉化也校验」。验收：124 个文件 `--check` 全过、`gofmt` 无输出、`go build ./pkg/scheduler/... ./cmd/kube-scheduler/...` 通过、行数与 v1.32.0 上游逐文件一致。
 
 ## 更新规则
 

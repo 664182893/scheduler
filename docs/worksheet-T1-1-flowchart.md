@@ -1,0 +1,108 @@
+# T1-1 流程图填空练习（自己填细节）
+
+> 用途：不看书，先把图里的 `填「...」` 补上，再对照答案。图只是骨架，细节由你填。
+> 规则：每个空都按「输入 / 输出 / 失败谁处理」三样写；填不出就写「断了」，不要猜。
+> 对照答案：`docs/SCHEDULER_STUDY_GUIDE.md`、`docs/review-2026-11-18.md`、`docs/SCHEDULER_CALLCHAIN.md`。
+
+## 图 1：主干 6 阶段（粗颗粒）
+
+```mermaid
+graph TD
+  A["0 入队：填「谁把 Pod 放进 activeQ」"] --> B["1 出队：填「哪个函数取 Pod」"]
+  B --> C["2 选节点：填「三个子步骤」"]
+  C --> D["3 占坑/预留：填「三个函数」"]
+  D --> E["4 绑定：填「异步边界行号 + 谁写 apiserver」"]
+  E --> F["5 收尾：填「finishBinding 做什么」"]
+  C -->|"0 个可行节点"| P["填「走 PostFilter 还是直接失败」"]
+  D -->|"Reserve 或 Permit 失败"| R["填「退哪两笔账」"]
+```
+
+## 图 2：`ScheduleOne` 的同步 / 异步分叉
+
+```mermaid
+sequenceDiagram
+  participant M as 主 goroutine
+  participant S as schedulingCycle
+  participant B as binding goroutine
+  M->>S: 填「调用所在行号」
+  S-->>M: 填「返回哪三个值」
+  alt 失败
+    M->>M: 填「调用哪个 Handler，退账吗」
+  else 成功
+    M->>B: 填「哪一行起 goroutine」
+    B->>B: 填「bindingCycle 的 4 个步骤」
+  end
+```
+
+## 图 3：`schedulePod` 的四个短路口（重点）
+
+```mermaid
+graph TD
+  A["schedulePod 开始"] --> B{"UpdateSnapshot 成功？"}
+  B -->|"否"| B1["填「返回什么，谁处理，退账吗」"]
+  B -->|"是"| C{"快照节点数 == 0？"}
+  C -->|"是"| C1["填「哪个 error，会不会抢占」"]
+  C -->|"否"| D["findNodesThatFitPod"]
+  D --> E{"可行节点数"}
+  E -->|"0"| E1["填「返回什么，PostFilter 做什么，最终 Status」"]
+  E -->|"1"| E2["填「跳过哪两个阶段，为什么安全」"]
+  E -->|">=2"| E3["填「prioritizeNodes 和 selectHost 各返回什么」"]
+```
+
+## 图 4：PreFilter / Filter / PostFilter
+
+```mermaid
+graph TD
+  P["PreFilter：填「跑几次，范围」"] --> P1["填「PreFilterResult 怎么缩小节点集」"]
+  P1 --> F["Filter：填「跑几次，是否并行」"]
+  F --> F1["填「第一个失败怎么办，原因写哪」"]
+  F1 --> G{"可行节点数 > 0？"}
+  G -->|"是"| S["填「下一步做什么」"]
+  G -->|"否"| PF["PostFilter：填「什么时候跑」"]
+  PF --> PF1["填「DefaultPreemption 做什么，返回什么 Status」"]
+```
+
+## 填空表
+
+按「位置 / 一句话职责 / 返回值给谁 / 失败谁处理」四列填。
+
+| 函数 | 文件:行号 | 一句话职责 | 返回值给谁 | 失败谁处理 |
+|---|---|---|---|---|
+| `ScheduleOne` | | | | |
+| `schedulingCycle` | | | | |
+| `schedulePod` | | | | |
+| `findNodesThatFitPod` | | | | |
+| `RunPreFilterPlugins` | | | | |
+| `findNodesThatPassFilters` | | | | |
+| `RunFilterPlugins` | | | | |
+| `prioritizeNodes` | | | | |
+| `selectHost` | | | | |
+| `assume` | | | | |
+| `RunReservePluginsReserve` | | | | |
+| `RunPermitPlugins` | | | | |
+| `bindingCycle` | | | | |
+| `bind` | | | | |
+| `RunBindPlugins` | | | | |
+| `DefaultBinder.Bind` | | | | |
+| `finishBinding` | | | | |
+| `RunPostBindPlugins` | | | | |
+
+## 自查清单
+
+填完后逐条自问，答不出就回到图里补：
+
+- [ ] 4 个短路口分别在什么条件触发？各自返回什么？
+- [ ] `ErrNoNodesAvailable` 和 `FitError` 对抢占的影响有什么不同？
+- [ ] 为什么 0 可行节点时 `EvaluatedNodes` 是 0？
+- [ ] 默认日志级别能看到什么？`-v=4` 多看到什么？
+- [ ] PreFilter 如何缩小节点集？Filter 的失败原因写到哪里？
+- [ ] PostFilter 什么时候跑？跑完返回什么 Status？
+- [ ] `go func` 在哪一行？之前必须完成哪三件事？
+- [ ] `Reserve` / `Permit` 失败时，退账的两个动作是什么？
+
+## 用法
+
+1. 先只看图，不看文档，用 10–15 分钟填。
+2. 填不出的空写「断了」，这就是下一轮的盲区。
+3. 对照 `docs/review-2026-11-18.md` 和 `docs/SCHEDULER_STUDY_GUIDE.md` 批改。
+4. 把错的写进 `progress.md` 的盲区台账，下一次验收先考这些。
