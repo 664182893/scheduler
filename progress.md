@@ -258,6 +258,7 @@
 - **2026-11-18（第 3 步收口）**：追问答完；纠正最终 Status 为 `NewStatus(Unschedulable).WithError(err)`（`:188`），`WithPlugin` 在 `RunPostFilterPlugins`（`framework.go:961`）；确认 trace 默认阈值与 V3/V4 关系。G16/G17 关闭，第 3 步通过。
 - **2026-11-18（复盘）**：生成 `docs/review-2026-11-18.md`，覆盖 `schedulePod` 四短路、`ErrNoNodesAvailable`/`FitError`、trace vs FitError、PreFilter/Filter/PostFilter 分工。
 - **2026-11-18（练习）**：新增 `docs/worksheet-T1-1-flowchart.md`，把 6 阶段、`ScheduleOne` 分叉、`schedulePod` 四短路、PreFilter/Filter/PostFilter 做成填空图。
+- **2026-11-18（流程规范）**：固化「每步开始先给填空版组件流程图」到 skill / `AGENTS.md`；worksheet 增加第 4 步 `findNodesThatFitPod` 的图 5（PreFilter 三种 Status / NominatedNode / Diagnosis）。
 - **2026-11-22**：把汉化扩到调度器全部非测试源码：`pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**`，共 124 个文件、34,144 行、3,032 个注释块（3,033 条译文）。映射写入 `scripts/annotations/` 并登记到 manifest；`apply_annotations.py` 增加只读文件处理与「已汉化也校验」。验收：124 个文件 `--check` 全过、`gofmt` 无输出、`go build ./pkg/scheduler/... ./cmd/kube-scheduler/...` 通过、行数与 v1.32.0 上游逐文件一致。
 
 ## 更新规则

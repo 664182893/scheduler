@@ -62,6 +62,55 @@ graph TD
   PF --> PF1["填「DefaultPreemption 做什么，返回什么 Status」"]
 ```
 
+## 图 5：第 4 步 `findNodesThatFitPod`（当前）
+
+### 5-1 主流程与 PreFilter 的三种 Status
+
+```mermaid
+graph TD
+  A["findNodesThatFitPod 开始"] --> B["allNodes = snapshot 节点列表"]
+  B --> C["RunPreFilterPlugins"]
+  C --> D{"PreFilter Status"}
+  D -->|"Success"| E{"preRes.AllNodes()?"}
+  D -->|"Rejected"| R["填：Diagnosis 怎么记？返回什么？为什么不是 error？"]
+  D -->|"Error"| X["填：返回什么？谁处理？"]
+  E -->|"true"| F["nodes = allNodes"]
+  E -->|"false"| G["填：怎么用 NodeNames 构造 nodes？缺失/排除节点怎么标？"]
+  F --> H["findNodesThatPassFilters（并行）"]
+  G --> H
+  H --> I["填：nextStartNodeIndex 怎么更新？出错也更新吗？"]
+  I --> J["findNodesThatPassExtenders"]
+  J --> K["填：返回哪三个值？Extender 过滤后补什么？"]
+```
+
+### 5-2 `NominatedNodeName` 提前返回
+
+```mermaid
+graph TD
+  A{"NominatedNodeName 非空？"} -->|"是"| B["evaluateNominatedNode"]
+  B --> C["填：里面跑哪两步？"]
+  C --> D{"feasibleNodes 非空？"}
+  D -->|"是"| E["填：返回什么？跳过哪一步？"]
+  D -->|"否"| F["继续全量扫描"]
+  A -->|"否"| F
+```
+
+### 5-3 `Diagnosis` 的四个字段
+
+| 字段 | 谁写 | 什么时候写 |
+|---|---|---|
+| `NodeToStatus` | 填 | 填 |
+| `UnschedulablePlugins` | 填 | 填 |
+| `PreFilterMsg` | 填 | 填 |
+| `PostFilterMsg` | 填 | 填 |
+
+本步要填的 4 个空：
+
+1. PreFilter `Rejected` 分支：Diagnosis 怎么记、返回什么、为什么不是 error？
+2. PreFilter `Error` 分支：返回什么、谁处理？
+3. `preRes.NodeNames` 怎么构造 `nodes`？缺失节点和排除节点怎么标？
+4. `nextStartNodeIndex` 怎么更新？为什么出错也更新？
+
 ## 填空表
 
 按「位置 / 一句话职责 / 返回值给谁 / 失败谁处理」四列填。
