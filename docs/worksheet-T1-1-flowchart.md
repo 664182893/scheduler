@@ -106,3 +106,17 @@ graph TD
 2. 填不出的空写「断了」，这就是下一轮的盲区。
 3. 对照 `docs/review-2026-11-18.md` 和 `docs/SCHEDULER_STUDY_GUIDE.md` 批改。
 4. 把错的写进 `progress.md` 的盲区台账，下一次验收先考这些。
+
+## 怎么改图（Zed / GitHub）
+
+- Markdown 预览是**只读**的；改的是 `.md` 文件里的 `mermaid` 代码块。
+- 把 `填「...」` 替换成你的答案，保留外面的 `["..."]` 或 `{"..."}` 结构。
+- 示例：
+  ```text
+  A["0 入队：填「谁把 Pod 放进 activeQ」"]
+  ↓ 改成
+  A["0 入队：informer → addPodToSchedulingQueue → activeQ"]
+  ```
+- Zed：命令面板 → `Markdown: Open Preview`；改源码后预览自动刷新。
+- GitHub：点铅笔编辑代码块，切到 Preview 看渲染；PR review 里只能评论/建议，不能直接拖动节点。
+- 不想碰 Mermaid 语法：直接填下面的「填空表」，效果一样。
