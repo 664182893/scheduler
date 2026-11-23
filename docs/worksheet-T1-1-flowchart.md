@@ -276,11 +276,11 @@ graph TD
   A["Parallelizer.Until 并行跑 checkNode(i)"] --> B["node = nodes[(nextStartNodeIndex+i)%numAllNodes]"]
   B --> C["RunFilterPluginsWithNominatedPods"]
   C --> D{"status"}
-  D -->|"Error"| E["填：怎么传错？cancel 吗？"]
-  D -->|"Success"| F["填：怎么计数/存放？超过 numNodesToFind 怎么办？"]
-  D -->|"Unschedulable"| G["填：先存哪？何时写 Diagnosis？"]
+  D -->|"Error"| E["填：调用SendErrorWithCancel，然后cancel(不阻塞发送方)"]
+  D -->|"Success"| F["填：用feasibleNodesLen来存数，成功+1，若超过 numNodesToFind 那么调用cancel，另外长度-1"]
+  D -->|"Unschedulable"| G["填：把节点名和状态写进 result[i]？在下面汇总失败原因的时候记录diagnosis"]
   F --> H["feasibleNodes = feasibleNodes[:feasibleNodesLen]"]
-  G --> I["结束：填两个写入方法"]
+  G --> I["结束：diagnosis.NodeToStatus.Set(item.node, item.status)和diagnosis.AddPluginStatus(item.status)"]
   E --> J["返回 feasibleNodes, err"]
   H --> K["返回 feasibleNodes, nil"]
   I --> K
