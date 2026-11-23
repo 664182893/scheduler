@@ -257,16 +257,16 @@ graph TD
 ```mermaid
 graph TD
   A["numAllNodes"] --> B{"numAllNodes < 100?"}
-  B -->|"是"| C["填：返回多少？"]
+  B -->|"是"| C["填：返回numAllNodes"]
   B -->|"否"| D{"percentage 有配置？"}
-  D -->|"是"| E["填：用哪个 percentage？"]
-  D -->|"否"| F["填：默认 percentage 公式？"]
+  D -->|"是"| E["填：使用用户配置的percentage"]
+  D -->|"否"| F["填：percentage = 50 - numAllNodes/125"]
   E --> G["numNodes = numAllNodes * percentage / 100"]
   F --> G
   G --> H{"numNodes < 100?"}
-  H -->|"是"| I["填：返回多少？"]
+  H -->|"是"| I["填：返回100"]
   H -->|"否"| J["返回 numNodes"]
-  K["没有 Filter / Score / Extender"] --> L["填：numNodesToFind = ? 为什么？"]
+  K["没有 Filter / Score / Extender"] --> L["填：numNodesToFind = 1 ，因为extender是需要并发获取调用节点，另外Score插件也是在多节点的时候才有意义，所有没有了这两个插件那么就不需要numnodes>1"]
 ```
 
 ### 7-2 并行 checkNode 与提前 cancel
