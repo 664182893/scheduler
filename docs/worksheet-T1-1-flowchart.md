@@ -3,9 +3,10 @@
 > 用途：不看书，先把图里的 `填「...」` 补上，再对照答案。图只是骨架，细节由你填。
 > 规则：每个空都按「输入 / 输出 / 失败谁处理」三样写；填不出就写「断了」，不要猜。
 > 对照答案：`docs/SCHEDULER_STUDY_GUIDE.md`、`docs/review-2026-11-18.md`、`docs/SCHEDULER_CALLCHAIN.md`。
+> 后续每一步的流程图都追加到本文档（图 8、图 9……），不要只留在聊天里。
 
-- 当前进度：第 5 步 `RunPreFilterPlugins`（第 4 步已通过）
-- 最近整理：2026-11-22
+- 当前进度：第 8 步 `prioritizeNodes`（第 6 步已通过；第 7 步并入第 6 步）
+- 最近整理：2026-11-24
 
 ## 目录
 
@@ -15,6 +16,8 @@
 - 图 4：PreFilter / Filter / PostFilter
 - 图 5：第 4 步 findNodesThatFitPod
 - 图 6：第 5 步 RunPreFilterPlugins
+- 图 7：第 6 步 findNodesThatPassFilters
+- 图 8：第 8 步 prioritizeNodes
 - 填空表
 - 自查清单
 - 用法
@@ -250,7 +253,7 @@ graph TD
 3. `Merge` 的四种组合分别返回什么？
 4. 多个插件的 `NodeNames` 交集为空时，返回什么 Status？消息怎么拼？
 
-## 图 7：第 6 步 `findNodesThatPassFilters`（当前）
+## 图 7：第 6 步 `findNodesThatPassFilters`（已通过）
 
 ### 7-1 找多少个可行节点
 
@@ -286,26 +289,83 @@ graph TD
   I --> K
 ```
 
+PS:fwk.Parallelizer().Until(ctx, numAllNodes, checkNode, metrics.Filter)
+这里checkNode，检查候选节点数；
+Until 底层是 workqueue.ParallelizeUntil(ctx, parallelism, pieces, fn)（parallelism.go:56-65），它做的是：
+生成 pieces 个工作项，编号 0 到 N（N为候选节点数）；
+用一组 worker 去消费这些编号；（默认是十几个worker轮流消费300个下表）
+每个编号恰好调用一次 checkNode(i)。
+
 ### 7-3 Nominated pods 两轮 Filter
 
 ```mermaid
 graph TD
   A["RunFilterPluginsWithNominatedPods"] --> B["i=0：addNominatedPods"]
   B --> C{"podsAdded?"}
-  C -->|"否"| D["填：跑几轮？"]
+  C -->|"否"| D["只跑一轮（没有提名 Pod，不需要第二轮）"]
   C -->|"是"| E["第一轮 Filter"]
   E --> F{"成功?"}
-  F -->|"否"| G["填：还跑第二轮吗？"]
+  F -->|"否"| G["不跑第二轮（第一轮已拒绝）"]
   F -->|"是"| H["i=1：不加 nominated pods，跑第二轮"]
-  H --> I["填：为什么两轮都要过？"]
+  H --> I["两轮都过才算可行：第一轮假设提名 Pod 在，第二轮假设提名 Pod 不在"]
 ```
 
 第 6 步要填的 4 个空：
 
 1. `numFeasibleNodesToFind` 的默认公式？为什么至少 100？为什么没有 Filter/Score/Extender 时直接取 1？
+默认公式：numNodes = numAllNodes * percentage / 100"
 2. `checkNode` 的 Error / Success / Unschedulable 三个分支分别做什么？超过 `numNodesToFind` 时为什么 cancel 并减一？
 3. 提前 cancel 安全吗？会不会漏掉更优节点？
 4. `RunFilterPluginsWithNominatedPods` 为什么要两轮？第一轮失败或没有提名 Pod 时怎样？
+
+## 图 8：第 8 步 `prioritizeNodes`（参考答案）
+
+对象：`schedule_one.go:755-865`
+
+### 8-1 主流程
+
+```mermaid
+graph TD
+  A["prioritizeNodes"] --> B{"没有 Extender 且没有 Score 插件?"}
+  B -->|"是"| C["每个节点 TotalScore = 1：同分占位，供 selectHost 抽样"]
+  B -->|"否"| D["RunPreScorePlugins"]
+  D --> E{"成功?"}
+  E -->|"否"| F["return nil, preScoreStatus.AsError()"]
+  E -->|"是"| G["RunScorePlugins"]
+  G --> H{"成功?"}
+  H -->|"否"| I["return nil, scoreStatus.AsError()"]
+  H -->|"是"| J["每个感兴趣的 Extender 并发 Prioritize"]
+  J --> K["finalscore = score * weight * (MaxNodeScore / MaxExtenderPriority)；加锁累加，最后合并进 nodesScores"]
+  K --> L["返回 nodesScores"]
+```
+
+### 8-2 Extender 分数合并
+
+```mermaid
+graph TD
+  A["Extender 打分"] --> B["每个 IsInterested 的 Extender 起一个 goroutine"]
+  B --> C["Prioritize(pod, nodes)"]
+  C --> D{"err?"}
+  D -->|"是"| E["不会让调度失败：V(5) 记日志后 return，该 Extender 不加分"]
+  D -->|"否"| F["finalscore = score * weight * (MaxNodeScore / MaxExtenderPriority)"]
+  F --> G["用 mu 保护共享 map allNodeExtendersScores 的写入"]
+  G --> H["wg.Wait 后由主 goroutine 合并进 nodesScores"]
+```
+
+### 第 8 步 4 个空的参考答案
+
+1. **主干与失败返回**
+   顺序：无 Extender 且无 Score → 直接占位；否则 `RunPreScorePlugins` → `RunScorePlugins` → Extender 合并。
+   PreScore 失败：`return nil, preScoreStatus.AsError()`；Score 失败：`return nil, scoreStatus.AsError()`。第二个返回值是 `error`，不是 `*Status`。
+
+2. **`TotalScore=1`**
+   这是占位分，让所有节点同分；`selectHost` 在最高分节点中做蓄水池抽样。1 不是加权结果，也不是算法必需，只是代码约定。
+
+3. **Extender 分数怎么合并**
+   每个 `IsInterested` 的 Extender 在独立 goroutine 里跑 `Prioritize`；分数按 `finalscore = score * weight * (MaxNodeScore / MaxExtenderPriority)` 缩放；`mu` 保护共享 map `allNodeExtendersScores`，`prioritizedList` 是各 goroutine 私有的；`wg.Wait` 等全部结束后，主 goroutine 再合并进 `nodesScores`。
+
+4. **`Prioritize` 出错**
+   Extender 调用可以失败，但错误会被忽略（V5 日志），该 Extender 不给任何节点加分；其他 Extender 和 Score 插件继续，整个调度不会因此失败。
 
 ## 填空表
 

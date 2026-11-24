@@ -1,8 +1,8 @@
 # 进度总表
 
-- 最近更新：2026-11-22
+- 最近更新：2026-11-24
 - 当前任务：**T1-1 追一个 Pod 的一生**
-- 当前粒度：**细颗粒 12 步 · 第 5 步（`RunPreFilterPlugins`）已通过；下一步第 6 步（`findNodesThatPassFilters`）**
+- 当前粒度：**细颗粒 12 步 · 第 8 步（`prioritizeNodes`）进行中；4 条追问待答**
 - 源码版本：kube-scheduler v1.32.0
 - 每日执行：见 `plan/daily-plan.md`
 - 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
@@ -14,8 +14,8 @@
 
 ## 下次入口
 
-1. 粗颗粒层与细颗粒第 2–5 步已通过（G13–G21 关闭）。
-2. 下一步：第 6 步 `findNodesThatPassFilters`（`schedule_one.go:591`）——并行 Filter、提前 cancel、nominated pods 两轮。
+1. 粗颗粒层与细颗粒第 2–6 步已通过（G13–G23 关闭；第 7 步 nominated pods 两轮已并入第 6 步）。
+2. 第 8 步 `prioritizeNodes`（`schedule_one.go:755`）进行中：8-1～8-4 已答（均 🟡），4 条追问待答。
 3. G1（cache/queue 混用）仍为 must-fix。
 
 ## 细颗粒第 2 步记录（2026-11-13）
@@ -169,6 +169,56 @@
 
 **G21 → fixed。第 5 步通过。**
 
+## 细颗粒第 6 步记录（2026-11-24，已通过）
+
+对象：`findNodesThatPassFilters`（[`schedule_one.go:591-673`](https://github.com/kubernetes/kubernetes/blob/v1.32.0/pkg/scheduler/schedule_one.go#L591)）
+
+### 本轮问答与判定（部分）
+
+| 题 | 你的答案 | 判定 | 纠正 |
+|---|---|---|---|
+| 6-1 `numNodesToFind` | 143；实际检查 300；返回 80 | 🟡 | 结论对，计算错：Go 是整数除法，`300/125 = 2`，percentage = 48，`300*48/100 = 144`。不足 144 时不会 cancel，`Until` 会把 300 个 piece 全跑完，返回 80 |
+| 6-2 `checkNode` 三分支 | Success 原子 +1、超限 cancel/-1；Unschedulable 写 `result[i]`；Error `SendErrorWithCancel` | 🟡 | 分支正确；未答「为什么超限要 -1」。见下方澄清 |
+| 6-3 提前 cancel 是否漏更优 | 无 Scoring 时不存在「最高分」；有 Scoring 时，若第 200 个节点不在 `numNodesToFind` 列表里就选不到 | ✅ | 正确：Filter 只保证可行；Score 只在采样窗口内比较 |
+| 6-4 nominated pods 两轮 | 第一轮假设提名 Pod 运行在该节点；第二轮假设提名 Pod 最终没来 | ✅ | 对应第一轮加、第二轮不加；两轮都过 = 无论提名 Pod 来不来，节点都放得下当前 Pod |
+
+### 本轮已澄清
+
+1. `numNodesToFind` 是「成功目标」，不是「扫描上限」。成功数不足时不会提前停，扫完 `numAllNodes` 个候选。
+2. 超限的 Success 不写入 `feasibleNodes`；`-1` 把原子计数改回「已存节点数」，否则 `feasibleNodes[:feasibleNodesLen]` 会越界。
+3. `cancel()` 只停止尚未开始的 `checkNode`，已在跑的会跑完；`-1` 是本地计数回退。两件事互相独立，先 cancel 只是尽早止损。
+4. `Until` 的 `pieces` 是 `numAllNodes`（候选总数），不是 `numNodesToFind`；每个下标恰好执行一次。没有 cancel 时 300 个 `checkNode` 全跑；有 cancel 时未开始的 piece 不再启动，但已在跑的会跑完。
+5. 提前 cancel 的两种语义：无 Scoring / 无 Extender Prioritizer 时 `numNodesToFind=1`，`schedulePod` 会跳过 `prioritizeNodes` 和 `selectHost`，不存在「更优」；有 Scoring 时只对扫描到的 N 个节点打分，窗口外的高分节点不会进入候选，这是 `percentageOfNodesToScore` 的采样取舍，不保证全局最优。
+6. Nominated pods 两轮：第一轮加提名 Pod 跑，第二轮不加提名 Pod 跑；只有第一轮成功且 `podsAdded=true` 才跑第二轮，两轮都过才算该节点可行。原因：只跑第一轮会过于悲观（资源/反亲和），只跑第二轮会过于乐观（Pod 亲和/资源）；提名 Pod 还没真正运行，必须同时满足「假设它们在」和「假设它们不在」两种情况。
+
+### 复述结果（2026-11-24）
+
+- 第一轮：假设提名 Pod 真的运行在这个节点（加提名 Pod）。
+- 第二轮：假设提名 Pod 最终没来（不加提名 Pod）。
+- 两轮都过：两种假设下节点都放得下当前 Pod。
+
+**G22 / G23 → fixed。第 6 步通过。**
+
+## 细颗粒第 8 步记录（2026-11-24，进行中）
+
+对象：`prioritizeNodes`（[`schedule_one.go:755-865`](https://github.com/kubernetes/kubernetes/blob/v1.32.0/pkg/scheduler/schedule_one.go#L755)）
+
+### 本轮问答与判定
+
+| 题 | 你的答案 | 判定 | 纠正 |
+|---|---|---|---|
+| 8-1 主干与失败返回 | 否 → PreScore → Score，取加权和合并；PreScore 失败返回 `*Status`，Score 失败返回 `nil, preScoreStatus.AsError()` | 🟡 | 主干对；两者都是 `return nil, status.AsError()`，PreScore 用 `preScoreStatus`，Score 用 `scoreStatus`；`AsError()` 返回 `error`，不是 `*Status` |
+| 8-2 `TotalScore=1` | 被 `selectHost` 使用 | 🟡 | 消费方对；1 是占位值，让所有节点同分，`selectHost` 在最高分中做蓄水池抽样；它不是加权计算的结果 |
+| 8-3 Extender 合并 | `finalscore` 公式；Mutex 防 `prioritizedList` 冲突；WaitGroup 等 goroutine 结束 | 🟡 | 公式对；锁保护的是共享 map `allNodeExtendersScores`，不是每个 goroutine 自己的 `prioritizedList`；WaitGroup 等结束后主 goroutine 再合并进 `nodesScores` |
+| 8-4 `Prioritize` 出错 | 不会调用失败，相互独立 | 🟡 | 调用可以失败；错误被忽略（V5 日志），该 Extender 不加分，其他插件继续，调度不失败 |
+
+### 待答追问
+
+1. `prioritizeNodes` 的第二个返回值类型是什么？`AsError()` 返回什么？PreScore / Score 分别用哪个 status 变量？
+2. 所有节点 `TotalScore=1` 时，`selectHost` 怎么选？
+3. `prioritizedList` 属于谁？多个 goroutine 共享的是谁？
+4. Extender 的 `Prioritize` 返回 error 时，该 Extender 的分数是什么？调度会失败吗？
+
 ## 追问复盘（2026-11-10 已答完）
 
 | # | 结果 | 要点 |
@@ -262,7 +312,8 @@
 - [x] 细颗粒第 3 步（`schedulePod`，2026-11-18 通过）
 - [x] 细颗粒第 4 步（`findNodesThatFitPod`，2026-11-22 通过）
 - [x] 细颗粒第 5 步（`RunPreFilterPlugins`，2026-11-22 通过）
-- [~] 细颗粒第 6 步（`findNodesThatPassFilters`）
+- [x] 细颗粒第 6 步（`findNodesThatPassFilters`，2026-11-24 通过；第 7 步 nominated pods 两轮并入本步）
+- [~] 细颗粒第 8 步（`prioritizeNodes`）
 - [ ] 终检：不看图口述完整链路
 
 ## 盲区台账
@@ -290,6 +341,11 @@
 | G19 | PreFilter `Rejected` 分支漏 `SetAbsentNodesStatus` / `AddPluginStatus` / 返回值 | fixed（2026-11-22） |
 | G20 | `nextStartNodeIndex` 公式漏 `% len(allNodes)` | fixed（2026-11-22） |
 | G21 | `PreFilterResult.Merge` 两个非 AllNodes 时取并集 | fixed（2026-11-22） |
+| G22 | 把提前 cancel 当成不影响结果；不清楚有 Scoring 时会漏掉未扫描的高分节点 | fixed（2026-11-24，已复述） |
+| G23 | 两轮 Filter 的精确顺序未说全：第一轮加提名 Pod、第二轮不加、两轮都过 | fixed（2026-11-24，已复述） |
+| G24 | 把 Extender 打分的锁保护对象说成 `prioritizedList`；实际保护共享 map `allNodeExtendersScores` | open（待复述） |
+| G25 | 把 `prioritizeNodes` 的失败返回说成 `*Status`；实际是 `(nil, status.AsError())` | open（待复述） |
+| G26 | 认为 Extender 的 `Prioritize` 不会失败；实际错误被忽略（V5），调度继续 | open（待复述） |
 
 ## 会话日志
 
@@ -320,6 +376,8 @@
 - **2026-11-18（流程规范）**：固化「每步开始先给填空版组件流程图」到 skill / `AGENTS.md`；worksheet 增加第 4 步 `findNodesThatFitPod` 的图 5（PreFilter 三种 Status / NominatedNode / Diagnosis）。
 - **2026-11-22**：把汉化扩到调度器全部非测试源码：`pkg/scheduler/**`、`cmd/kube-scheduler/**`、`staging/k8s.io/kube-scheduler/**`，共 124 个文件、34,144 行、3,032 个注释块（3,033 条译文）。映射写入 `scripts/annotations/` 并登记到 manifest；`apply_annotations.py` 增加只读文件处理与「已汉化也校验」。验收：124 个文件 `--check` 全过、`gofmt` 无输出、`go build ./pkg/scheduler/... ./cmd/kube-scheduler/...` 通过、行数与 v1.32.0 上游逐文件一致。
 - **2026-11-22（全量）**：按要求扩到该目录下所有 Go 文件与所有注释：177 个文件（含 52 个 `_test.go`）、83,979 行、4,012 个注释块 + 152 条行尾注释 + 6 处 `/* ... */` 块注释。`annotate_comments.py` 增加 `--scope all`；新增 `apply_block_comments.py` 与 `block_comments.json`；`--check` 改为去注释后比较代码。验收：177 个文件 `--check --scope all` 全过、块注释 0 缺失、`gofmt` 无输出、`go build` 通过、`go test -run '^$'` 全部测试包可编译、行数与 v1.32.0 上游一致。
+
+- **2026-11-24**：完成细颗粒第 6 步 `findNodesThatPassFilters`（含 nominated pods 两轮）。6-1 / 6-2 细节判 🟡 并纠正；6-3 / 6-4 复述通过；G22 / G23 fixed。下一步第 8 步 `prioritizeNodes`。
 
 ## 更新规则
 
