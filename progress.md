@@ -2,7 +2,7 @@
 
 - 最近更新：2026-11-24
 - 当前任务：**T1-1 追一个 Pod 的一生**
-- 当前粒度：**细颗粒 12 步 · 第 8 步（`prioritizeNodes`）进行中；4 条追问待答**
+- 当前粒度：**细颗粒 12 步 · 第 9 步（`RunScorePlugins`）已通过；下一步第 10 步（`selectHost`）**
 - 源码版本：kube-scheduler v1.32.0
 - 每日执行：见 `plan/daily-plan.md`
 - 源码位置：各机器用 `scripts/setup-source.*` 拉取；本仓库不提交源码
@@ -14,9 +14,10 @@
 
 ## 下次入口
 
-1. 粗颗粒层与细颗粒第 2–6 步已通过（G13–G23 关闭；第 7 步 nominated pods 两轮已并入第 6 步）。
-2. 第 8 步 `prioritizeNodes`（`schedule_one.go:755`）进行中：8-1～8-4 已答（均 🟡），4 条追问待答。
-3. G1（cache/queue 混用）仍为 must-fix。
+1. 粗颗粒层与细颗粒第 2–9 步已通过（G13–G29 关闭；第 7 步 nominated pods 两轮已并入第 6 步）。
+2. 第 8 步 `prioritizeNodes` 已通过（`schedule_one.go:755`）；8-2 的 `selectHost` 同分抽样留到第 10 步复测。
+3. 下一步：第 10 步 `selectHost`（`schedule_one.go:873`）——同分蓄水池抽样。
+4. G1（cache/queue 混用）仍为 must-fix。
 
 ## 细颗粒第 2 步记录（2026-11-13）
 
@@ -199,7 +200,7 @@
 
 **G22 / G23 → fixed。第 6 步通过。**
 
-## 细颗粒第 8 步记录（2026-11-24，进行中）
+## 细颗粒第 8 步记录（2026-11-24，已通过）
 
 对象：`prioritizeNodes`（[`schedule_one.go:755-865`](https://github.com/kubernetes/kubernetes/blob/v1.32.0/pkg/scheduler/schedule_one.go#L755)）
 
@@ -207,17 +208,40 @@
 
 | 题 | 你的答案 | 判定 | 纠正 |
 |---|---|---|---|
-| 8-1 主干与失败返回 | 否 → PreScore → Score，取加权和合并；PreScore 失败返回 `*Status`，Score 失败返回 `nil, preScoreStatus.AsError()` | 🟡 | 主干对；两者都是 `return nil, status.AsError()`，PreScore 用 `preScoreStatus`，Score 用 `scoreStatus`；`AsError()` 返回 `error`，不是 `*Status` |
-| 8-2 `TotalScore=1` | 被 `selectHost` 使用 | 🟡 | 消费方对；1 是占位值，让所有节点同分，`selectHost` 在最高分中做蓄水池抽样；它不是加权计算的结果 |
-| 8-3 Extender 合并 | `finalscore` 公式；Mutex 防 `prioritizedList` 冲突；WaitGroup 等 goroutine 结束 | 🟡 | 公式对；锁保护的是共享 map `allNodeExtendersScores`，不是每个 goroutine 自己的 `prioritizedList`；WaitGroup 等结束后主 goroutine 再合并进 `nodesScores` |
-| 8-4 `Prioritize` 出错 | 不会调用失败，相互独立 | 🟡 | 调用可以失败；错误被忽略（V5 日志），该 Extender 不加分，其他插件继续，调度不失败 |
+| 8-1 主干与失败返回 | 否 → PreScore → Score，取加权和合并；失败返回 `error` | ✅ | 两者都是 `return nil, status.AsError()`：PreScore 用 `preScoreStatus`，Score 用 `scoreStatus` |
+| 8-2 `TotalScore=1` | 被 `selectHost` 使用 | 🟡 | 消费方对；1 是占位值，让所有节点同分，`selectHost` 在最高分中做蓄水池抽样；同分选哪个留到第 10 步复测 |
+| 8-3 Extender 合并 | `finalscore` 公式；Mutex 防 `prioritizedList` 冲突；WaitGroup 等 goroutine 结束 | ✅ | 公式对；锁保护共享 map `allNodeExtendersScores`；WaitGroup 等结束后主 goroutine 再合并进 `nodesScores` |
+| 8-4 `Prioritize` 出错 | 不会调用失败，相互独立 | ✅ | 单个 Extender 调用可以失败；错误被忽略（V5），该 Extender 不加分，其他插件继续，调度不失败 |
 
-### 待答追问
+### 复述结果（2026-11-24）
 
-1. `prioritizeNodes` 的第二个返回值类型是什么？`AsError()` 返回什么？PreScore / Score 分别用哪个 status 变量？
-2. 所有节点 `TotalScore=1` 时，`selectHost` 怎么选？
-3. `prioritizedList` 属于谁？多个 goroutine 共享的是谁？
-4. Extender 的 `Prioritize` 返回 error 时，该 Extender 的分数是什么？调度会失败吗？
+1. `prioritizeNodes` 失败返回 `error`。✅
+2. `prioritizedList` 不共享；锁保护 `allNodeExtendersScores` map。✅
+3. Extender 的 `Prioritize` 是单个调用，失败可忽略，调度不失败。✅
+
+**G24 / G25 / G26 → fixed。第 8 步通过（8-2 的 `selectHost` 同分抽样留到第 10 步复测）。**
+
+## 细颗粒第 9 步记录（2026-11-24，已通过）
+
+对象：`RunScorePlugins`（[`framework.go:1112-1218`](https://github.com/kubernetes/kubernetes/blob/v1.32.0/pkg/scheduler/framework/runtime/framework.go#L1112)）
+
+### 本轮问答与判定
+
+| 题 | 你的答案 | 判定 | 纠正 |
+|---|---|---|---|
+| 9-1 三阶段粒度（9-2 表） | 已把 9-2 表填对：Score 节点 / NormalizeScore 插件 / 权重节点 | ✅ | 三行粒度与理由都正确 |
+| 9-2 `pluginToNodeScores` 不加锁 | map；并发维度是节点；不同 worker 写不同 index | ✅ | 正确：阶段 1 按节点并行，每个节点 worker 按插件串行写 `[plugin][nodeIndex]`，不同 nodeIndex 不重叠 |
+| 9-3 `TotalScore` | NormalizeScore 做归一化；权重在第三步记录总分时应用并累加 | ✅ | 正确：NormalizeScore 归一化；权重在第三阶段应用，`TotalScore` 在第三阶段累加 |
+| 9-4 `SkipScorePlugins` / 失败返回 | PreScore 返回 Skip 时写入；单节点短路不进 Score；两条错误返回正确 | ✅ | `SkipScorePlugins` 由 `RunPreScorePlugins` 的 defer 写入；单节点短路跳过 `prioritizeNodes` |
+| 9-1 图 E/H/K | 不会继续跑；当前 worker 立刻停止并调用 `cancel()` 取消整个 ctx | ✅ | 核心正确；精确说：当前 `checkNode` 立即 return，worker 返回后不再领新 piece；已在跑的 worker 会跑完，最后 `RunScorePlugins` 用 `AsStatus` 包装返回 |
+
+### 复述结果（2026-11-24）
+
+1. `pluginToNodeScores` 是 map；阶段 1 并发维度是节点；不同 worker 写不同 index。✅
+2. NormalizeScore 归一化；权重在第三步应用并累加 `TotalScore`。✅
+3. 当前 `checkNode` 出错后不会继续跑该节点的其他插件，立即停止并 cancel ctx。✅
+
+**G27 / G28 / G29 → fixed。第 9 步通过。**
 
 ## 追问复盘（2026-11-10 已答完）
 
@@ -256,7 +280,7 @@
 |---|---|---|---|---|
 | T0-1 | 让调度器说话 | W1 必做 | 🟡 有产出，未验收 | `logs/` 有 v=5 窗口与 describe |
 | T0-2 | 亲手制造一次 FailedScheduling | W1 必做 | 🟡 有产出，未验收 | `logs/08–10` + 失败矩阵 |
-| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | 粗颗粒已过；细颗粒第 2、3 步已过，下一步第 4 步 `findNodesThatFitPod` |
+| T1-1 | 追一个 Pod 的一生 | W1 必做 | 🔄 进行中 | 粗颗粒已过；细颗粒第 2–9 步已过，下一步第 10 步 `selectHost` |
 | T1-2 | 找到那个 goroutine 的边界 | W1 弹性 | ⬜ 未开始 | 与 T1-1 第 4/12 步重叠 |
 | T1-3 | 多个插件怎么合并成一个分数 | W2 弹性 | ⬜ 未开始 | |
 | T2-0 | 先把 kube-scheduler 编译出来 | W2 必做 | ⬜ 未开始 | |
@@ -313,7 +337,9 @@
 - [x] 细颗粒第 4 步（`findNodesThatFitPod`，2026-11-22 通过）
 - [x] 细颗粒第 5 步（`RunPreFilterPlugins`，2026-11-22 通过）
 - [x] 细颗粒第 6 步（`findNodesThatPassFilters`，2026-11-24 通过；第 7 步 nominated pods 两轮并入本步）
-- [~] 细颗粒第 8 步（`prioritizeNodes`）
+- [x] 细颗粒第 8 步（`prioritizeNodes`，2026-11-24 通过）
+- [x] 细颗粒第 9 步（`RunScorePlugins`，2026-11-24 通过）
+- [~] 细颗粒第 10 步（`selectHost`）
 - [ ] 终检：不看图口述完整链路
 
 ## 盲区台账
@@ -343,9 +369,12 @@
 | G21 | `PreFilterResult.Merge` 两个非 AllNodes 时取并集 | fixed（2026-11-22） |
 | G22 | 把提前 cancel 当成不影响结果；不清楚有 Scoring 时会漏掉未扫描的高分节点 | fixed（2026-11-24，已复述） |
 | G23 | 两轮 Filter 的精确顺序未说全：第一轮加提名 Pod、第二轮不加、两轮都过 | fixed（2026-11-24，已复述） |
-| G24 | 把 Extender 打分的锁保护对象说成 `prioritizedList`；实际保护共享 map `allNodeExtendersScores` | open（待复述） |
-| G25 | 把 `prioritizeNodes` 的失败返回说成 `*Status`；实际是 `(nil, status.AsError())` | open（待复述） |
-| G26 | 认为 Extender 的 `Prioritize` 不会失败；实际错误被忽略（V5），调度继续 | open（待复述） |
+| G24 | 把 Extender 打分的锁保护对象说成 `prioritizedList`；实际保护共享 map `allNodeExtendersScores` | fixed（2026-11-24，已复述） |
+| G25 | 把 `prioritizeNodes` 的失败返回说成 `*Status`；实际是 `(nil, status.AsError())` | fixed（2026-11-24，已复述） |
+| G26 | 认为 Extender 的 `Prioritize` 不会失败；实际错误被忽略（V5），调度继续 | fixed（2026-11-24，已复述） |
+| G27 | 把 `pluginToNodeScores` 说成「单个节点里的各插件得分」；实际是 `map[插件名] -> 所有节点的分数列表` | fixed（2026-11-24，已复述） |
+| G28 | 把 `SkipScorePlugins` 的来源说成 Filter / 单节点短路；实际由 `RunPreScorePlugins` 写入 | fixed（2026-11-24，已复述） |
+| G29 | 把 `RunScorePlugins` 的错误分支说成「打印 error / cancel 当前插件 / 下一个 chunk 前退出」；实际是 errCh + cancel ctx，当前 checkNode 立即返回 | fixed（2026-11-24，已复述） |
 
 ## 会话日志
 
@@ -378,6 +407,8 @@
 - **2026-11-22（全量）**：按要求扩到该目录下所有 Go 文件与所有注释：177 个文件（含 52 个 `_test.go`）、83,979 行、4,012 个注释块 + 152 条行尾注释 + 6 处 `/* ... */` 块注释。`annotate_comments.py` 增加 `--scope all`；新增 `apply_block_comments.py` 与 `block_comments.json`；`--check` 改为去注释后比较代码。验收：177 个文件 `--check --scope all` 全过、块注释 0 缺失、`gofmt` 无输出、`go build` 通过、`go test -run '^$'` 全部测试包可编译、行数与 v1.32.0 上游一致。
 
 - **2026-11-24**：完成细颗粒第 6 步 `findNodesThatPassFilters`（含 nominated pods 两轮）。6-1 / 6-2 细节判 🟡 并纠正；6-3 / 6-4 复述通过；G22 / G23 fixed。下一步第 8 步 `prioritizeNodes`。
+- **2026-11-24（续）**：完成细颗粒第 8 步 `prioritizeNodes`。8-1 / 8-3 / 8-4 复述通过；8-2 的 `selectHost` 同分抽样留到第 10 步复测；G24–G26 fixed。下一步第 9 步 `RunScorePlugins`。
+- **2026-11-24（续2）**：完成细颗粒第 9 步 `RunScorePlugins`。三阶段并发粒度、`pluginToNodeScores` 不加锁、NormalizeScore / 权重阶段、错误分支均复述通过；G27–G29 fixed。下一步第 10 步 `selectHost`。
 
 ## 更新规则
 

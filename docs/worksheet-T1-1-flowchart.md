@@ -5,7 +5,7 @@
 > 对照答案：`docs/SCHEDULER_STUDY_GUIDE.md`、`docs/review-2026-11-18.md`、`docs/SCHEDULER_CALLCHAIN.md`。
 > 后续每一步的流程图都追加到本文档（图 8、图 9……），不要只留在聊天里。
 
-- 当前进度：第 8 步 `prioritizeNodes`（第 6 步已通过；第 7 步并入第 6 步）
+- 当前进度：第 10 步 `selectHost`（第 9 步已通过）
 - 最近整理：2026-11-24
 
 ## 目录
@@ -18,6 +18,8 @@
 - 图 6：第 5 步 RunPreFilterPlugins
 - 图 7：第 6 步 findNodesThatPassFilters
 - 图 8：第 8 步 prioritizeNodes
+- 图 9：第 9 步 RunScorePlugins
+- 图 10：第 10 步 selectHost
 - 填空表
 - 自查清单
 - 用法
@@ -318,7 +320,7 @@ graph TD
 3. 提前 cancel 安全吗？会不会漏掉更优节点？
 4. `RunFilterPluginsWithNominatedPods` 为什么要两轮？第一轮失败或没有提名 Pod 时怎样？
 
-## 图 8：第 8 步 `prioritizeNodes`（参考答案）
+## 图 8：第 8 步 `prioritizeNodes`（已通过 · 参考答案）
 
 对象：`schedule_one.go:755-865`
 
@@ -366,6 +368,76 @@ graph TD
 
 4. **`Prioritize` 出错**
    Extender 调用可以失败，但错误会被忽略（V5 日志），该 Extender 不给任何节点加分；其他 Extender 和 Score 插件继续，整个调度不会因此失败。
+
+## 图 9：第 9 步 `RunScorePlugins`（已通过）
+
+对象：`framework.go:1112-1218`
+
+### 9-1 三个并行阶段
+
+```mermaid
+graph TD
+  A["RunScorePlugins"] --> B["过滤 SkipScorePlugins"]
+  B --> C["阶段 1：按节点并行跑 Score"]
+  C --> D{"有插件失败?"}
+  D -->|"是"| E["填：SendErrorWithCancel(err, cancel) -> 当前 checkNode 立即 return-> Until 停止分发新 piece -> ReceiveError 取到错误-> return nil, AsStatus"]
+  D -->|"否"| F["阶段 2：按插件并行跑 NormalizeScore"]
+  F --> G{"有插件失败?"}
+  G -->|"是"| H["填： return nil, AsStatus"]
+  G -->|"否"| I["阶段 3：按节点并行应用 weight + 汇总 TotalScore"]
+  I --> J{"分数越界?"}
+  J -->|"是"| K["填：输出错误，同时cancel,立刻返回error"]
+  J -->|"否"| L["返回 allNodePluginScores"]
+```
+
+### 9-2 并发粒度对照（填空）
+
+| 阶段 | 并行粒度 | 为什么 |
+|---|---|---|
+| Score | 节点 | 每个节点的分数独立；一个 worker 处理一个节点，内层按插件串行；写 pluginToNodeScores[plugin][nodeIndex]，不同 worker 的 index 不重叠 |
+| NormalizeScore | 插件 | 它需要某个插件在所有节点上的完整 NodeScoreList；不同插件的列表彼此独立 |
+| 应用权重 | 节点 | 每个节点的最终总分独立；读已归一化的列表，写 allNodePluginScores[index] |
+
+### 第 9 步要填的 4 个空
+
+1. 三个阶段分别按什么粒度并行？为什么 Score 按节点、NormalizeScore 按插件？
+2. `pluginToNodeScores` 为什么不需要加锁？
+3. `TotalScore` 在哪一步累加？公式是什么？
+4. `SkipScorePlugins` 谁设置？Score / NormalizeScore 失败怎么返回？
+
+## 图 10：第 10 步 `selectHost`（当前）
+
+对象：`schedule_one.go:873-919`
+
+### 10-1 选择与同分抽样
+
+```mermaid
+graph TD
+  A["selectHost(nodeScoreList, count)"] --> B{"列表为空?"}
+  B -->|"是"| C["填：返回什么"]
+  B -->|"否"| D["建最大堆，按 TotalScore 降序"]
+  D --> E["弹出最高分，selectedIndex = 0"]
+  E --> F{"还有节点?"}
+  F -->|"否"| M["填：返回什么"]
+  F -->|"是"| G["取下一个节点 ns"]
+  G --> H{"ns 分数 == 最高分?"}
+  H -->|"是"| I["填：怎么抽样"]
+  H -->|"否"| J{"已收满 count 个?"}
+  J -->|"是"| L["填：继续还是停"]
+  J -->|"否"| K["追加到结果列表"]
+  I --> K
+  K --> F
+  L --> M
+  M --> N["把 selectedIndex 换到第一个，截断到 count"]
+  N --> O["返回 host + top 列表"]
+```
+
+### 第 10 步要填的 4 个空
+
+1. `selectHost` 的输入、输出分别是什么？列表为空时返回什么？
+2. 为什么用最大堆？`count` 参数是什么？
+3. 同分时为什么蓄水池抽样？`cntOfMaxScore` 和 `rand.Intn(cntOfMaxScore) == 0` 怎么保证均匀？
+4. 为什么返回列表的第一个一定是选中的节点？`selectedIndex` 交换做了什么？
 
 ## 填空表
 
